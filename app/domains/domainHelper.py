@@ -1,6 +1,9 @@
 from .domain import domain
 from collections.abc import Callable
 
+from .testDomain import testDomain
+
+
 domain_name_list =[
     "testDomain"
 ]

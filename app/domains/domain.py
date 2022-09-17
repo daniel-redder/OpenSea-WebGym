@@ -1,7 +1,7 @@
+import gym
 
 
-
-class domain:
+class domain(gym.Env):
     def __init__(self,uniqueName:str):
         """
         Instantiates a domain.
@@ -9,7 +9,7 @@ class domain:
 
         """
 
-        self.id = None
+        self.env_id = None
         self.uniqueName = uniqueName
 
 

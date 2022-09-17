@@ -4,14 +4,21 @@ import cv2
 import os, sys
 import numpy as np
 
-#-----------------------------------------------------------------#
+#--------------------------Imports---------------------------------------#
+from gym.core import ObsType
+
 from domains import domainHelper
 
 
-#------------------------imports-----------------------------------#
+#------------------------configuration-----------------------------------#
 
 
 app = flask.Flask(__name__,template_folder="templates")
+
+
+
+
+#-------------------------------- GUI PAGES --------------------------------------------------
 
 @app.route("/")
 @app.route("/home")
@@ -20,10 +27,26 @@ def index():
 
 
 
+
+
 #TODO list for REST QUERY system
+#----------------------------------------------------- required for functionality ---------------------
+
 #TODO update json errors with proper error returns
+#TODO save environment state
+#TODO implement this later - steps
+#TODO implement this later - reset
 
 
+
+#----------------------------------- low priority -------------------------------------------------
+
+#TODO implement other environment attribute fetching as per https://www.gymlibrary.dev/api/core/
+
+
+#----------------------------------------------------------------------------------------------------
+
+#------------------------------- API CALLS ----------------------------------------------------------------
 
 @app.route("/env/create/<domainName>",methods=["POST"])
 def createEnvironment(domainName):
@@ -52,7 +75,57 @@ def createEnvironment(domainName):
     try:
 
         environment=domainHelper.getConstructor(domainName)(*data)
-        return {"agent_api_keys":environment.get_agent_api(),"env_id":environment.id}
+
+        #TODO save environment state
+
+
+        return {"agent_api_keys":environment.get_agent_api(),"env_id":environment.env_id}
 
     except Exception as e:
         return {"error":e+" caught in domain instancing"}
+
+
+
+
+
+@app.route("/env/step/<domainName>/<env_id>/<api_key>",methods=["POST"])
+def stepEnvironment(domainName,env_id,api_key)->tuple[ObsType, float, bool, bool, dict]:
+    """
+
+    :param domainName: name of the domain
+    :param env_id: unique id of domain instance
+    :param api_key: unique api_key of agent for instance of domain
+    :return: Tuple[ObsType, float, bool, bool, dict]
+    :returns: https://www.gymlibrary.dev/api/core/ via json
+    """
+
+    #TODO implement this later - steps
+
+    pass
+
+
+
+@app.route("/env/reset/<domainName>/<env_id>/<api_key>")
+def resetEnvironment(domainName,env_id,api_key)->tuple[ObsType, dict]:
+    """
+
+    :param domainName:
+    :param env_id:
+    :param api_key:
+    :return:
+    """
+
+    #TODO implement this later - reset
+
+    pass
+
+
+
+
+
+
+
+
+
+
+
