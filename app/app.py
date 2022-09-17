@@ -20,6 +20,9 @@ def index():
 
 
 
+#TODO list for REST QUERY system
+#TODO update json errors with proper error returns
+
 
 
 @app.route("/env/create/<domainName>",methods=["POST"])
@@ -46,4 +49,10 @@ def createEnvironment(domainName):
     if not domainName in domainList:
         return {"error":"domain not found"}
 
+    try:
 
+        environment=domainHelper.getConstructor(domainName)(*data)
+        return {"agent_api_keys":environment.get_agent_api(),"env_id":environment.id}
+
+    except Exception as e:
+        return {"error":e+" caught in domain instancing"}

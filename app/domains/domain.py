@@ -9,5 +9,9 @@ class domain:
 
         """
 
-
+        self.id = None
         self.uniqueName = uniqueName
+
+
+    def get_agent_api(self)->[int]:
+        return None
