@@ -10,7 +10,7 @@ class domain(gym.Env):
         """
 
         self.env_id = None
-        self.uniqueName = uniqueName
+        self.uniqueName = str(self.__class__)
 
 
     def get_agent_api(self)->[int]:
