@@ -48,7 +48,7 @@ def index():
 
 #------------------------------- API CALLS ----------------------------------------------------------------
 
-@app.route("/env/create/<domainName>",methods=["POST"])
+@app.route("/env/creategym/<domainName>",methods=["POST"])
 def createEnvironment(domainName):
     """
     Creates a domain environment with the listed params
@@ -88,7 +88,7 @@ def createEnvironment(domainName):
 
 
 
-@app.route("/env/step/<domainName>/<env_id>/<api_key>",methods=["POST"])
+@app.route("/env/stepgym/<domainName>/<env_id>/<api_key>",methods=["POST"])
 def stepEnvironment(domainName,env_id,api_key)->tuple[ObsType, float, bool, bool, dict]:
     """
 
@@ -105,7 +105,7 @@ def stepEnvironment(domainName,env_id,api_key)->tuple[ObsType, float, bool, bool
 
 
 
-@app.route("/env/reset/<domainName>/<env_id>/<api_key>")
+@app.route("/env/resetgym/<domainName>/<env_id>/<api_key>")
 def resetEnvironment(domainName,env_id,api_key)->tuple[ObsType, dict]:
     """
 

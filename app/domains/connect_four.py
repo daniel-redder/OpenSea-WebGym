@@ -14,7 +14,7 @@ class connect_four(domain):
 
 
 
-test = connect_four(**args)
+test = connect_four()
 test.model.reset()
 
 print(test.model.agents)
