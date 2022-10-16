@@ -33,6 +33,12 @@ AGENT_CACHE_LIMIT= 3
 agent_lookup_cache = []
 agent_cache = []
 
+
+
+def saveModel(model):
+    pickle.dump(model[1]["model"],model[0])
+
+
 def cache(agents:[str], domain, envID:int, domainName:str):
     """
     holds the model in memory (to avoid uneccesary reads)
@@ -45,14 +51,18 @@ def cache(agents:[str], domain, envID:int, domainName:str):
     :return: None
     """
 
+    key = f"{domainName}_{envID}"
+
     #TODO replace with dictionary saving
-    for i in agents:
-        agent_cache.append(i)
+    agent_lookup_cache.append(key)
+    agent_cache.append([key,{"domain":domain,"agents":agents}])
 
     #TODO ensure that popped items are saved in db
     while(len(agent_cache) > AGENT_CACHE_LIMIT):
-        agent_cache.pop(0)
+        removal_model = agent_cache.pop(0)
+        agent_lookup_cache.pop()
 
+        saveModel(removal_model)
 
 #TODO
 def recache():
