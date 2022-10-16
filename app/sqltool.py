@@ -2,6 +2,7 @@ import sqlite3 as sql
 import secrets
 import os
 import dill as pickle
+from typing import Union, Any
 
 #database initialization for instance tracking -------------------------------------
 conn = sql.connect("db.db")
@@ -26,8 +27,10 @@ conn.close()
 #the number of agents kept in memory
 AGENT_CACHE_LIMIT= 3
 
+#using LRU for caching
+
 #optimize with lookup table?
-#agent_lookup_cache = {}
+agent_lookup_cache = []
 agent_cache = []
 
 def cache(agents:[str], domain, envID:int, domainName:str):
@@ -41,14 +44,32 @@ def cache(agents:[str], domain, envID:int, domainName:str):
     :param agents:
     :return: None
     """
+
+    #TODO replace with dictionary saving
     for i in agents:
         agent_cache.append(i)
 
+    #TODO ensure that popped items are saved in db
     while(len(agent_cache) > AGENT_CACHE_LIMIT):
         agent_cache.pop(0)
 
 
+#TODO
+def recache():
+    """
+    modifies order of cache (threaded)
+
+    :return:
+    """
+    pass
+
+
 def connector()->[sql.Connection,sql.Cursor]:
+    """
+    simplification of cursor creations
+
+    :return: sqlite3 connector, cursor
+    """
     conn=sql.connect("db.db")
     curse = conn.cursor()
     return conn, curse
@@ -127,11 +148,24 @@ def removeInstance(domainName, envId):
 
 
 #TODO naively searching improve with some variant of lookup table
-def getInstance(envID:str, domainName:str):
+def getInstance(envID:str, domainName:str, apiKey:str)->Union[bool,Any]:
 
     key = f"{domainName}_{envID}"
 
-    if key in
+    try:
+        exists = agent_lookup_cache.index(key)
 
-    else:
+        #handles faulty apiKey
+        if not apiKey in agent_cache[exists]["agents"]:
+            return False
+
+        #TODO
+        #threading here to edit position in memory stack
+        recache()
+
+        return agent_cache[exists]
+
+
+    except:
+
         model = pickle.load(f"domain_pickle/{domainName}_{envID}")
