@@ -1,4 +1,4 @@
-from .domain import domain
+from .domain import domainWrapper
 from collections.abc import Callable
 
 from .testDomain import testDomain
@@ -17,4 +17,4 @@ def getDomainNameList()->[str]:
 
 
 def getConstructor(domainName)->Callable[...,domain]:
-    return None
+    return

@@ -1,4 +1,3 @@
-from domain import domain
 from pettingzoo import AECEnv
 from gymnasium import spaces
 import numpy as np

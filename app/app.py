@@ -1,5 +1,7 @@
 import flask
 from flask import jsonify, request, send_file, Response
+import sqltool
+from domains.domain import domainWrapper
 import cv2
 import os, sys
 import numpy as np
@@ -48,7 +50,7 @@ def index():
 
 #------------------------------- API CALLS ----------------------------------------------------------------
 
-@app.route("/env/creategym/<domainName>",methods=["POST"])
+@app.route("/env/createzoo/<domainName>",methods=["POST"])
 def createEnvironment(domainName):
     """
     Creates a domain environment with the listed params
@@ -66,6 +68,10 @@ def createEnvironment(domainName):
     if not  domainName == request.view_args["domainName"]:
         return {"error":"internal domainName param matching error see createDomain, admin"}
 
+    try:
+        print(request.view_args["agentCount"])
+    except:
+        return {"error":"remember to include agentCount"}
 
     domainList = domainHelper.getDomainNameList()
 
@@ -75,11 +81,10 @@ def createEnvironment(domainName):
     try:
 
         environment=domainHelper.getConstructor(domainName)(*data)
+        envID, apiKeys = sqltool.createInstance(domainName=domainName, agentCount=request.view_args["agentCount"], domain = environment)
 
-        #TODO save environment state
+        return {"agent_api_keys":apiKeys,"env_id":envID}
 
-
-        return {"agent_api_keys":environment.get_agent_api(),"env_id":environment.env_id}
 
     except Exception as e:
         return {"error":e+" caught in domain instancing"}
@@ -88,7 +93,7 @@ def createEnvironment(domainName):
 
 
 
-@app.route("/env/stepgym/<domainName>/<env_id>/<api_key>",methods=["POST"])
+@app.route("/env/stepzoo/<domainName>/<env_id>/<api_key>",methods=["POST"])
 def stepEnvironment(domainName,env_id,api_key)->tuple[ObsType, float, bool, bool, dict]:
     """
 
@@ -115,7 +120,7 @@ def resetEnvironment(domainName,env_id,api_key)->tuple[ObsType, dict]:
     :return:
     """
 
-    #TODO implement this later - reset
+
 
     pass
 
