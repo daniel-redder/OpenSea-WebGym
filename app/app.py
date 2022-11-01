@@ -27,7 +27,8 @@ app = flask.Flask(__name__,template_folder="templates")
 def index():
     return flask.render_template("index.html")
 
-
+@app.route("/env/details/<envID>",methods=["POST"])
+def
 
 
 
