@@ -120,29 +120,27 @@
         <button>Go To Details</button>
       </td>
     </tr>
-    <tr>
-      <td>
-        test
-      </td>
-      <td>
-        test
-      </td>
-      <td>
-        <button>Go To Details</button>
-      </td>
-    </tr><tr>
-      <td>
-        test
-      </td>
-      <td>
-        test
-      </td>
-      <td>
-        <button>Go To Details</button>
-      </td>
-    </tr>
-    
-    
+    <script>
+      var cached_instances = {{cached_instances | safe}};
+      tablBody = document.getElementById("Saved_table_body");
+
+      for(i = 0; i < cached_instances.length; i++){
+        row = document.createElement("tr");
+        
+        if(i==2){
+          but = document.createElement("button")
+          but.onclick = 
+        }
+        else{
+          for(p=0;p<cached_instances[i].length; p++){
+            column = document.createElement("td");
+            column.innerHTML = cached_instances[i][p];
+            row.appendChild(column);
+          }
+        }
+        tablBody.appendChild(row);
+      }
+    </script>    
   </tbody>
 </table>
 
