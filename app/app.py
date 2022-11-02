@@ -35,10 +35,10 @@ def index():
 
 
   
-@app.route("/env/details/<envID>",methods=["POST"])
-def details(envID):
-    cached_envs = sqltool.
-    return flask.render_template("details.html",)
+# @app.route("/env/details/<envID>",methods=["POST"])
+# def details(envID):
+#     cached_envs = sqltool.
+#     return flask.render_template("details.html",)
     
 #----------------------------------------------------------------------------------------------
   
