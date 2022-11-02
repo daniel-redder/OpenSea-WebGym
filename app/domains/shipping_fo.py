@@ -5,10 +5,11 @@ import numpy as np
 class raw_env(AECEnv):
   metadata = {}
   
-  def __init__(self,avg_route_len=100,route_count=None,avg_piracy=0.1,avg_storm=.4):
+  def __init__(self,agent_count:int,avg_route_len=100,route_count=None,avg_piracy=0.1,avg_storm=.4):
     super().__init__()
     
-    self.agents = None
+    self.agents = [f"captain_{x}" for x in range(agent_count)]
+    self.possible_agents = self.agents[:]
 
     self.move_speed=2
 
@@ -46,15 +47,10 @@ class raw_env(AECEnv):
 
     #The position of all agents (current route, distance along route, number of steps)
     
-    self.state_space = 
-
-
-  
+    self.state_space = [int(np.random.random()*len(self.routes)), 0, 0 for x in self.agents]
 
   def reset(self):
     pass
-
-
 
   def step(self, action:[int]):
 
@@ -94,16 +90,10 @@ class raw_env(AECEnv):
       self.rewards[ship] += ship.state_space[ship_index][1] / ship.state_space[ship_index][2] # win reward = dist/steps
       self.terminations[ship_index] = True
 
-    # TODO: not sure if the below is needed or not
-    # self._accumulate_rewards()
+    # petting zoo reward function
+    self._accumulate_rewards()
 
-  def observe(self):
-        
-
-
+  #def observe(self):
 
 class shipping_fo(domain):
   def env():
-
-
-
