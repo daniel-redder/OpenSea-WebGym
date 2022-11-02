@@ -6,11 +6,14 @@ import numpy as np
 class raw_env(AECEnv):
   metadata = {}
   
-  def __init__(self,agent_count:int,avg_route_len=100,route_count=10,avg_piracy=0.1,avg_storm=.4):
+  def __init__(self,agent_count:int,move_speed=2,avg_route_len=100,route_count=10,avg_piracy=0.1,avg_storm=.4):
     super().__init__()
-    agent_count
+    # agent setup
     self.agents = [f"captain_{x}" for x in range(agent_count)]
     self.possible_agents = self.agents[:]
+    self.move_speed = move_speed
+
+    # environment setup
     self.avg_route_len = avg_route_len
     self.route_count = route_count
     self.avg_piracy = avg_piracy
@@ -26,8 +29,6 @@ class raw_env(AECEnv):
     self.infos = {i: {} for i in self.agents}
     self._agent_selector = agent_selector(self.agents)
     self.agent_selection = self._agent_selector.reset()
-
-    self.move_speed=2
 
     np.random.seed(seed)
 
@@ -63,7 +64,14 @@ class raw_env(AECEnv):
 
     #The position of all agents (current route, distance along route, number of steps)
     
-    self.state_space = [[int(np.random.random()*len(self.routes)), 0, 0] for x in self.agents]
+    self.state_space = [[int(np.random.random()*len(self.routes)), 0, 0] for i in self.agents]
+    self.observation_spaces = {
+      i: spaces.Dict(
+        {
+          "observation": np.array([self.state_space[i][0],0,0 for i in range(len(self.agents))])
+        }
+      ) for i in self.agents
+    }
 
   def step(self, action:[int]):
 
