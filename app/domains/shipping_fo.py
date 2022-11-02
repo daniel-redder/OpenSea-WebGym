@@ -13,12 +13,12 @@ class raw_env(AECEnv):
 
     self.move_speed=2
 
-    np.random.seed(seed = self.seed)
+    np.random.seed(seed = 0)
 
-    self.route_count = route_count or int(np.random.normal(loc=6,std=3))
+    self.route_count = route_count or int(np.random.normal(loc=6,scale=3))
 
       #list of :routes: (len of each route,piracy chance per tick, storm chance per tick)
-    self.routes = [(int(np.random.normal(loc=avg_route_len, std=0.15*avg_route_len)), np.random.normal(loc=self.move_speed/avg_route_len*avg_priacy,std=0.35*self.move_speed/avg_route_len*avg_priacy), np.random.normal(loc=self.move_speed/avg_route_len*avg_storm,std=0.35*self.move_speed/avg_route_len*avg_storm)) for x in   range(self.route_count)]
+    self.routes = [(int(np.random.normal(loc=avg_route_len, scale=0.15*avg_route_len)), np.random.normal(loc=self.move_speed/avg_route_len*avg_piracy,scale=0.35*self.move_speed/avg_route_len*avg_piracy), np.random.normal(loc=self.move_speed/avg_route_len*avg_storm,scale=0.35*self.move_speed/avg_route_len*avg_storm)) for x in   range(self.route_count)]
 
     self.flotsam = [[0 for x in range(y[0])] for y in self.routes]    
     
@@ -47,7 +47,7 @@ class raw_env(AECEnv):
 
     #The position of all agents (current route, distance along route, number of steps)
     
-    self.state_space = [int(np.random.random()*len(self.routes)), 0, 0 for x in self.agents]
+    self.state_space = [[int(np.random.random()*len(self.routes)), 0, 0] for x in self.agents]
 
   def reset(self):
     pass
@@ -86,7 +86,7 @@ class raw_env(AECEnv):
         self.terminations[ship_index] = True
 
     # check if route has been completed
-    if self.routes[ship.state_space[ship_index][0]][0] < ship.state_space[ship_index][1]
+    if self.routes[ship.state_space[ship_index][0]][0] < ship.state_space[ship_index][1]:
       self.rewards[ship] += ship.state_space[ship_index][1] / ship.state_space[ship_index][2] # win reward = dist/steps
       self.terminations[ship_index] = True
 
@@ -95,5 +95,5 @@ class raw_env(AECEnv):
 
   #def observe(self):
 
-class shipping_fo(domain):
-  def env():
+#class shipping_fo(domain):
+#  def env():
