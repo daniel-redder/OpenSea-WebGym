@@ -11,6 +11,7 @@ class raw_env(AECEnv):
     # agent setup
     self.agents = [f"captain_{x}" for x in range(agent_count)]
     self.possible_agents = self.agents[:]
+    self._cumulative_rewards = {f"captain_{x}":0.0 for x in range(agent_count)}
     self.move_speed = move_speed
 
     # environment setup
