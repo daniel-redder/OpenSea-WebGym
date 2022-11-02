@@ -170,7 +170,7 @@ class raw_env(AECEnv):
         return [i for i in range(7) if self.board[i] == 0]
 
     # action in this case is a value from 0 to 6 indicating position to move on the flat representation of the connect4 board
-    def step(self, p):
+    def step(self, action):
         if (
             self.truncations[self.agent_selection]
             or self.terminations[self.agent_selection]
