@@ -28,6 +28,18 @@ if os.path.exists("ticker.txt"):
         envID_ticker = int(tick.readline())
 
 
+
+
+
+def get_cache():
+  return [ [md[1].uniqueName,md[1].envID,"",md[1].agentIndex,md[1].creationDate,md[1].trackingRewards] for md in agent_cache]
+
+
+
+
+
+
+
 def _getEnvID():
     envID_ticker+=1
     return envID_ticker
@@ -76,7 +88,7 @@ def _cache(domain):
         _saveModel(removal_model)
 
 #TODO
-def recache():
+def _recache():
     """
     modifies order of cache (threaded)
 

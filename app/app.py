@@ -1,6 +1,6 @@
 import flask
 from flask import jsonify, request, send_file, Response
-import sqltool
+import pickleJar as sqltool
 from domains.domain import domainWrapper
 import cv2
 import os, sys
@@ -22,14 +22,26 @@ app = flask.Flask(__name__,template_folder="templates")
 
 #-------------------------------- GUI PAGES --------------------------------------------------
 
+#-------------------------------- Debugging Webpages -----------------------------------------
+"""
+Use this for debugging, this will show api keys to anyone who can access the site so be sure to not use this on a open network. 
+"""
+
 @app.route("/")
 @app.route("/home")
 def index():
-    return flask.render_template("index.html")
+    cached_instances = sqltool.get_cache()
+    return flask.render_template("index.html",cached_instances = cached_instances)
 
+
+  
 @app.route("/env/details/<envID>",methods=["POST"])
-def
-
+def details(envID):
+    cached_envs = sqltool.
+    return flask.render_template("details.html",)
+    
+#----------------------------------------------------------------------------------------------
+  
 
 
 #TODO list for REST QUERY system
