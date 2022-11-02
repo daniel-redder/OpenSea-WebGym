@@ -14,13 +14,16 @@ AGENT_CACHE_LIMIT= 3
 
 #optimize with lookup table?
 global agent_cache
-agent_cache = {}
+agent_cache = []
 
-global agent_queue
-agent_queue = []
+# global agent_queue
+# agent_queue = []
 
 global envID_ticker
 envID_ticker = 0
+
+
+
 
 
 if os.path.exists("ticker.txt"):
@@ -28,22 +31,23 @@ if os.path.exists("ticker.txt"):
         envID_ticker = int(tick.readline())
 
 
+def _getEnvID():
+    global envID_ticker
+    envID_ticker+=1
+    return envID_ticker
+
+
+
+from domains.connect_four_temp import raw_env as env
+#TODO temporary remove
+testenv = env()
+
+agent_cache = [["key",domainWrapper(envID=_getEnvID(),agentAPI=["abcdaa","1qsdgqwef","asefawef1"],domain=testenv)]]
 
 
 
 def get_cache():
-  return [ [md[1].uniqueName,md[1].envID,"",md[1].agentIndex,md[1].creationDate,md[1].trackingRewards] for md in agent_cache]
-
-
-
-
-
-
-
-def _getEnvID():
-    envID_ticker+=1
-    return envID_ticker
-
+  return [ [md[1].uniqueName,md[1].envID,"",md[1].agentIndex,md[1].creationDate.strftime("%m/%d/%y, %H:%M"),str(md[1].trackingRewards)] for md in agent_cache]
 
 
 def _saveModel(domain:[str,domainWrapper]):

@@ -35,10 +35,10 @@ def index():
 
 
   
-# @app.route("/env/details/<envID>",methods=["POST"])
-# def details(envID):
-#     cached_envs = sqltool.
-#     return flask.render_template("details.html",)
+@app.route("/env/details/<envID>",methods=["POST"])
+def details(envID):
+    data = sqltool.get_data(envID)
+    return flask.render_template("details.html",data=data)
     
 #----------------------------------------------------------------------------------------------
   
@@ -107,7 +107,7 @@ def createEnvironment(domainName):
 
 
 @app.route("/env/stepzoo/<domainName>/<env_id>/<api_key>",methods=["POST"])
-def stepEnvironment(domainName,env_id,api_key)->tuple[ObsType, float, bool, bool, dict]:
+def stepEnvironment(domainName,env_id,api_key)->(ObsType, float, bool, bool, dict):
     """
 
     :param domainName: name of the domain
@@ -124,7 +124,7 @@ def stepEnvironment(domainName,env_id,api_key)->tuple[ObsType, float, bool, bool
 
 
 @app.route("/env/resetgym/<domainName>/<env_id>/<api_key>")
-def resetEnvironment(domainName,env_id,api_key)->tuple[ObsType, dict]:
+def resetEnvironment(domainName,env_id,api_key)->(ObsType, dict):
     """
 
     :param domainName:
@@ -139,6 +139,7 @@ def resetEnvironment(domainName,env_id,api_key)->tuple[ObsType, dict]:
 
 
 
+app.run(port=8080)
 
 
 
