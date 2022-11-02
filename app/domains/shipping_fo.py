@@ -5,9 +5,16 @@ import numpy as np
 class raw_env(AECEnv):
   metadata = {}
   
-  def __init__(self,agent_count:int,avg_route_len=100,route_count=None,avg_piracy=0.1,avg_storm=.4):
+  def __init__(self,agent_count:int,avg_route_len=100,route_count=10,avg_piracy=0.1,avg_storm=.4):
     super().__init__()
+    self.agent_count = agent_count
+    self.avg_route_len = avg_route_len
+    self.route_count = route_count
+    self.avg_piracy = avg_piracy
+    self.avg_storm = avg_storm
+    reset()
     
+  def reset(self):
     self.agents = [f"captain_{x}" for x in range(agent_count)]
     self.possible_agents = self.agents[:]
 
@@ -49,9 +56,6 @@ class raw_env(AECEnv):
     
     self.state_space = [[int(np.random.random()*len(self.routes)), 0, 0] for x in self.agents]
 
-  def reset(self):
-    pass
-
   def step(self, action:[int]):
 
     if (
@@ -89,6 +93,8 @@ class raw_env(AECEnv):
     if self.routes[ship.state_space[ship_index][0]][0] < ship.state_space[ship_index][1]:
       self.rewards[ship] += ship.state_space[ship_index][1] / ship.state_space[ship_index][2] # win reward = dist/steps
       self.terminations[ship_index] = True
+
+    self.agent_selection = self._agent_selector.next()
 
     # petting zoo reward function
     self._accumulate_rewards()
