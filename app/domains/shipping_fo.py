@@ -1,5 +1,6 @@
 from pettingzoo import AECEnv
 from gymnasium import spaces
+from pettingzoo.utils.agent_selector import agent_selector
 import numpy as np
 
 class raw_env(AECEnv):
@@ -7,25 +8,33 @@ class raw_env(AECEnv):
   
   def __init__(self,agent_count:int,avg_route_len=100,route_count=10,avg_piracy=0.1,avg_storm=.4):
     super().__init__()
-    self.agent_count = agent_count
+    agent_count
+    self.agents = [f"captain_{x}" for x in range(agent_count)]
+    self.possible_agents = self.agents[:]
     self.avg_route_len = avg_route_len
     self.route_count = route_count
     self.avg_piracy = avg_piracy
     self.avg_storm = avg_storm
-    reset()
+    self.reset()
     
-  def reset(self):
-    self.agents = [f"captain_{x}" for x in range(agent_count)]
-    self.possible_agents = self.agents[:]
+  def reset(self, seed=0, return_info=True, options={"options":1}):
+    self.agents = self.possible_agents[:]
+    self.rewards = {i: 0 for i in self.agents}
+    self._cumulative_rewards = {name: 0 for name in self.agents}
+    self.truncations = {i: False for i in self.agents}
+    self.terminations = {i: False for i in self.agents}
+    self.infos = {i: {} for i in self.agents}
+    self._agent_selector = agent_selector(self.agents)
+    self.agent_selection = self._agent_selector.reset()
 
     self.move_speed=2
 
-    np.random.seed(seed = 0)
+    np.random.seed(seed)
 
-    self.route_count = route_count or int(np.random.normal(loc=6,scale=3))
+    self.route_count = self.route_count or int(np.random.normal(loc=6,scale=3))
 
       #list of :routes: (len of each route,piracy chance per tick, storm chance per tick)
-    self.routes = [(int(np.random.normal(loc=avg_route_len, scale=0.15*avg_route_len)), np.random.normal(loc=self.move_speed/avg_route_len*avg_piracy,scale=0.35*self.move_speed/avg_route_len*avg_piracy), np.random.normal(loc=self.move_speed/avg_route_len*avg_storm,scale=0.35*self.move_speed/avg_route_len*avg_storm)) for x in   range(self.route_count)]
+    self.routes = [(int(np.random.normal(loc=self.avg_route_len, scale=0.15*self.avg_route_len)), np.random.normal(loc=self.move_speed/self.avg_route_len*self.avg_piracy,scale=0.35*self.move_speed/self.avg_route_len*self.avg_piracy), np.random.normal(loc=self.move_speed/self.avg_route_len*self.avg_storm,scale=0.35*self.move_speed/self.avg_route_len*self.avg_storm)) for x in   range(self.route_count)]
 
     self.flotsam = [[0 for x in range(y[0])] for y in self.routes]    
     
@@ -99,7 +108,8 @@ class raw_env(AECEnv):
     # petting zoo reward function
     self._accumulate_rewards()
 
-  #def observe(self):
+  def observe(self, b):
+    pass
 
 #class shipping_fo(domain):
 #  def env():
