@@ -132,14 +132,16 @@ class raw_env(AECEnv):
       if np.random.random() < self.routes[self.state_space[ship_index][0]][1] and not brace:
         self.flotsam[self.state_space[ship_index][0]] = 1
         self.rewards[ship] -= self.state_space[ship_index][2] / self.state_space[ship_index][1] if self.state_space[ship_index][1] != 0 else 0 # lose reward = -1*steps/dist
-        print(ship + " scored " + str(self.rewards[ship]))
+        # print(ship + " scored " + str(self.rewards[ship]))
         self.terminated[ship] = True
+        self.terminations[ship] = True
 
       # check if route has been completed
       if self.routes[self.state_space[ship_index][0]][0] < self.state_space[ship_index][1]:
         self.rewards[ship] += self.state_space[ship_index][1] / self.state_space[ship_index][2] if self.state_space[ship_index][2] != 0 else 0 # win reward = dist/steps
-        print(ship + " scored " + str(self.rewards[ship]))
+        # print(ship + " scored " + str(self.rewards[ship]))
         self.terminated[ship] = True
+        self.terminations[ship] = True
     else:
       all_dead = True
       last_alive = None
@@ -149,7 +151,7 @@ class raw_env(AECEnv):
           last_alive = i
           break
 
-      print("all dead" if all_dead else last_alive)
+      #print("all dead" if all_dead else last_alive)
       
       if all_dead:
         self.terminations = {i: True for i in self.agents}
