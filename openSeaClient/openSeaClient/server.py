@@ -1,13 +1,17 @@
-
+import requests
 
 class server():
 
-    def __init__(self, ipaddr:str, port:int=80):
+    def __init__(self, ipaddr:str=None, port:int=80):
         self.ipaddr = ipaddr
         self.port = port
-
         self.test_connection()
 
+        #-------------- given by remote (or config) ----------------
+        self.apiKeys = None
+        self.envID = None
+        self.domainName = None
+        #-----------------------------------------------
 
     def test_connection(self):
         """
@@ -15,29 +19,46 @@ class server():
         :return:
         """
 
+        try:
+            val = requests.post(self.ipaddr+self.port+"/ping",json={})
+            print(val)
+        except:
+            print("connection failure")
 
-    def create_env(self):
+
+    def create_env(self,domainName,agentCount,**args):
         """
         calls model creation
         :return:
         """
-        pass
+        url = f"{self.ipaddr}:{self.port}/env/createzoo/{domainName}"
+        args["agentCount"] = agentCount
+
+        try:
+            val = requests.post(url, json=args)
+            self.domainName = domainName
+            return val
+
+        except:
+            print("Environment Creation Failure")
 
 
-    def model_connect(self,):
+
+
+
+
+    def step(self,action,agentIndex):
         """
-        connects to existing environment
+        sends step to environment
         :return:
         """
+        url = f"{self.ipaddr}:{self.port}/env/stepzoo/{self.domainName}/{self.envID}/{self.apiKeys[agentIndex]}"
+        json = {"action":action}
 
-
-
-    def step(self):
-        """
-        sends step to environment and returns results
-        :return:
-        """
-        pass
+        try:
+            val = requests.post(url,json=json)
+        except:
+            print("failure on step")
 
 
     def wait(self,ping_test_delay:int):

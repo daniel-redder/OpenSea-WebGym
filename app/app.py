@@ -69,6 +69,13 @@ def details(envID):
 
 #------------------------------- API CALLS ----------------------------------------------------------------
 
+
+@app.route("/ping",methods=["POST"])
+def ping():
+    return {"message":"successful connection"}
+
+
+
 @app.route("/env/createzoo/<domainName>",methods=["POST","GET"])
 def createEnvironment(domainName):
     """
