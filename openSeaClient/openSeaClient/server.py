@@ -73,12 +73,14 @@ class server():
 
 
 
-    def wait(self,ping_test_delay:int):
+    def agent_iter(self,ping_test_delay:int):
         """
         waits for turn to act
         :param ping_test_delay:
         :return:
         """
+        pass
+        #TODO
 
 
 
@@ -89,4 +91,10 @@ class server():
         resets environment
         :return:
         """
-        pass
+        url = f"{self.ipaddr}:{self.port}/env/resetgym/{self.domainName}/{self.envID}/{self.apiKeys[0]}"
+        json = {}
+
+        try:
+            val = requests.post(url, json=json)
+        except:
+            print("error in reset")
