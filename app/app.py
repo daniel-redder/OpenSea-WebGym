@@ -146,6 +146,7 @@ def stepEnvironment(domainName,env_id,api_key)->(ObsType, float, bool, bool, dic
     return {}
 
 
+@app.route("/env/lastzoo/<domainName>/<env_id>/<api_key>")
 def lastEnvironment(domainName, env_id, api_key):
     """
 
@@ -159,9 +160,9 @@ def lastEnvironment(domainName, env_id, api_key):
     if result == False:
         return {"error": "invalid environment lookup, possibly bad apiKey"}
 
-    obs, reward, termination, truncation = result.domain.last()
+    obs, reward, termination, truncation, info = result.domain.last()
 
-    return {"observation":obs,"reward":reward,"termination":termination,"truncation":truncation}
+    return {"observation":obs,"reward":reward,"termination":termination,"truncation":truncation, "info":info}
 
 
 @app.route("/env/resetgym/<domainName>/<env_id>/<api_key>")

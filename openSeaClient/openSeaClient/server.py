@@ -61,13 +61,28 @@ class server():
             print("failure on step")
 
 
+    def last(self,agentIndex:int):
+        url = f"{self.ipaddr}:{self.port}/env/lastzoo/{self.envID}/{self.apiKeys[agentIndex]}"
+        json = {}
+
+        try:
+            val = requests.post(url,json=json)
+            return val["observation"], val["reward"], val["termination"], val["truncation"], val["info"]
+        except:
+            print("last failure")
+
+
+
     def wait(self,ping_test_delay:int):
         """
         waits for turn to act
         :param ping_test_delay:
         :return:
         """
-        pass
+
+
+
+
 
     def reset(self):
         """
