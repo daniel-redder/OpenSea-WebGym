@@ -1,6 +1,6 @@
 import flask
 from flask import jsonify, request, send_file, Response
-import pickleJar as sqltool
+import pickleJar as pj
 from domains.domain import domainWrapper
 import cv2
 import os, sys
@@ -10,6 +10,17 @@ import numpy as np
 from gym.core import ObsType
 
 from domains import domainHelper
+
+import atexit
+
+
+#------------------------ atexit thread ---------------------------------#
+
+def on_exit():
+    pj.clear_cache()
+
+atexit.register(on_exit)
+
 
 
 #------------------------configuration-----------------------------------#
@@ -30,14 +41,14 @@ Use this for debugging, this will show api keys to anyone who can access the sit
 @app.route("/")
 @app.route("/home")
 def index():
-    cached_instances = sqltool.get_cache()
+    cached_instances = pj.get_cache()
     return flask.render_template("index.html",cached_instances = cached_instances)
 
 
   
 @app.route("/env/details/<envID>",methods=["POST"])
 def details(envID):
-    data = sqltool.get_data(envID)
+    data = pj.get_data(envID)
     return flask.render_template("details.html",data=data)
     
 #----------------------------------------------------------------------------------------------
@@ -46,11 +57,6 @@ def details(envID):
 
 #TODO list for REST QUERY system
 #----------------------------------------------------- required for functionality ---------------------
-
-#TODO update json errors with proper error returns
-#TODO save environment state
-#TODO implement this later - steps
-#TODO implement this later - reset
 
 
 
@@ -63,7 +69,7 @@ def details(envID):
 
 #------------------------------- API CALLS ----------------------------------------------------------------
 
-@app.route("/env/createzoo/<domainName>",methods=["POST"])
+@app.route("/env/createzoo/<domainName>",methods=["POST","GET"])
 def createEnvironment(domainName):
     """
     Creates a domain environment with the listed params
@@ -76,7 +82,8 @@ def createEnvironment(domainName):
         data = request.get_json()
 
     else:
-        return {"error":"post request not provided for create Domain"}
+        print("test")
+        data = {}
 
     if not  domainName == request.view_args["domainName"]:
         return {"error":"internal domainName param matching error see createDomain, admin"}
@@ -94,7 +101,7 @@ def createEnvironment(domainName):
     try:
 
         environment=domainHelper.getConstructor(domainName)(*data)
-        envID, apiKeys = sqltool.createInstance(domainName=domainName, agentCount=request.view_args["agentCount"], domain = environment)
+        envID, apiKeys = pj.createInstance(domainName=domainName, agentCount=request.view_args["agentCount"], domain = environment)
 
         return {"agent_api_keys":apiKeys,"env_id":envID}
 
@@ -117,10 +124,37 @@ def stepEnvironment(domainName,env_id,api_key)->(ObsType, float, bool, bool, dic
     :returns: https://www.gymlibrary.dev/api/core/ via json
     """
 
-    #TODO implement this later - steps
+    result = pj.getInstance(envID=env_id,domainName=domainName,apiKey=api_key)
 
-    pass
+    if result == False:
+        return {"error":"invalid environment lookup, possibly bad apiKey"}
 
+    try:
+        action = request.get_json()["action"]
+    except:
+        return {"error":"no action provided"}
+
+    result.domain.step(action)
+
+    return {}
+
+
+def lastEnvironment(domainName, env_id, api_key):
+    """
+
+    :param domainName:
+    :param env_id:
+    :param api_key:
+    :return:
+    """
+    result = pj.getInstance(envID=env_id, domainName=domainName, apiKey=api_key)
+
+    if result == False:
+        return {"error": "invalid environment lookup, possibly bad apiKey"}
+
+    obs, reward, termination, truncation = result.domain.last()
+
+    return {"observation":obs,"reward":reward,"termination":termination,"truncation":truncation}
 
 
 @app.route("/env/resetgym/<domainName>/<env_id>/<api_key>")
@@ -133,9 +167,14 @@ def resetEnvironment(domainName,env_id,api_key)->(ObsType, dict):
     :return:
     """
 
+    result = pj.getInstance(envID=env_id, domainName=domainName, apiKey=api_key)
 
+    if result == False:
+        return {"error": "invalid environment lookup, possibly bad apiKey"}
 
-    pass
+    result.domain.reset()
+
+    return {}
 
 
 

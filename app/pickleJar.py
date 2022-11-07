@@ -16,8 +16,9 @@ AGENT_CACHE_LIMIT= 3
 global agent_cache
 agent_cache = []
 
-# global agent_queue
-# agent_queue = []
+global agent_lookup
+agent_lookup = []
+
 
 global envID_ticker
 envID_ticker = 0
@@ -48,6 +49,18 @@ agent_cache = [["key",domainWrapper(envID=_getEnvID(),agentAPI=["abcdaa","1qsdgq
 
 def get_cache():
   return [ [md[1].uniqueName,md[1].envID,"",md[1].agentIndex,md[1].creationDate.strftime("%m/%d/%y, %H:%M"),str(md[1].trackingRewards)] for md in agent_cache]
+
+
+
+def clear_cache():
+    """
+
+    :return:
+    """
+    for x in agent_cache:
+        _saveModel(x)
+
+
 
 
 def _saveModel(domain:[str,domainWrapper]):
@@ -85,21 +98,24 @@ def _cache(domain):
 
 
     agent_cache.append([key,domain])
+    agent_lookup.append(key)
 
 
     while(len(agent_cache) > AGENT_CACHE_LIMIT):
         removal_model = agent_cache.pop(0)
+        agent_lookup.pop(0)
         _saveModel(removal_model)
 
 #TODO
-def _recache():
+def _recache(domain:[str,domainWrapper]):
     """
     modifies order of cache (threaded)
 
     :return:
     """
-    pass
-
+    agent_cache.insert( 0, agent_cache.pop( agent_cache.index(domain) ) )
+    agent_lookup.insert( 0, agent_lookup.pop(agent_lookup.index(domain[0])))
+    #https://stackoverflow.com/questions/3173154/move-an-item-inside-a-list
 
 
 
@@ -135,16 +151,16 @@ def createInstance(domainName:str, agentCount:int, domain)->[str,[str]]:
 
 
 
-def removeInstance(domainName, envId):
-    """
-    Removes a specific instance from the database
-
-    :param domainName:
-    :param envId:
-    :return:
-    """
-    pass
-    #agent_cache.remove()
+# def removeInstance(domainName, envId):
+#     """
+#     Removes a specific instance from the database
+#
+#     :param domainName:
+#     :param envId:
+#     :return:
+#     """
+#     pass
+#     #agent_cache.remove()
 
 
 
@@ -160,7 +176,8 @@ def getInstance(envID:str, domainName:str, apiKey:str)->Union[bool,Any]:
     key = f"{domainName}_{envID}"
 
     try:
-        exists = agent_cache[key]
+        exists = agent_lookup.index(key)
+        #exists = agent_cache
 
         #handles faulty apiKey
         if not apiKey in agent_cache[exists].agentAPI:
@@ -168,7 +185,7 @@ def getInstance(envID:str, domainName:str, apiKey:str)->Union[bool,Any]:
 
         #TODO
         #threading here to edit position in memory stack
-        recache()
+        _recache()
 
         return agent_cache[exists]
 

@@ -1,20 +1,19 @@
-from .domain import domainWrapper
 from typing import Callable
 
 
 
 
-domain_name_list =[
-
-]
-
-
+domain_name_list = {
+    "connect_four_temp"
+}
 
 
 
-def getDomainNameList()->[str]:
-    return domain_name_list
+def getConstructor(domainName):
+    try:
+        con = __import__(domain_name_list[domainName]).env
+        return con
 
 
-def getConstructor(domainName)->Callable[...,domainWrapper]:
-    return
+    except:
+        return False
