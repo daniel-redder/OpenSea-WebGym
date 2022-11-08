@@ -134,7 +134,10 @@ class raw_env(AECEnv):
       brace = action/2
       
       # determine route progress
+      # last = self.state_space[ship_index][2]
       self.state_space[ship_index][2] += 1
+      # if last != self.state_space[ship_index][2]:
+      #   print(ship, self.state_space[ship_index][2])
       if change_route:
         self.state_space[ship_index][0] = (self.state_space[ship_index][0] + 1) % len(self.routes)
       else:
@@ -169,15 +172,14 @@ class raw_env(AECEnv):
 
       # check if done
       all_dead = True
-      last_alive = None
       for i in self.terminated:
-        if not i:
+        if not self.terminated[i]:
           all_dead = False
-          last_alive = i
           break
 
       # terminate if done
       if all_dead:
+        #self.truncations[self.agent_selection] = True
         self.terminations = {i: True for i in self.agents}
         return self._was_dead_step(None)        
 

@@ -19,15 +19,26 @@ for agent in env.agent_iter():
     #print(observation,reward,termination,truncation,info,agent)
     #action = policy(observation, agent)
     action = numpy.random.randint(4) if env.terminations[agent] == False and env.truncations[agent] == False else None #shipping_fo
-    #action = numpy.random.randint(7) if env.terminations[agent] == False else None #c4
+    # if env.terminations[agent] == False:
+    #     action = numpy.random.randint(7) if env.terminations[agent] == False else None #c4
+    #     for action in range(7):
+    #         if observation["action_mask"][action] == 1:
+    #             break
+    # else:
+    #     action = None
     env.step(action)
 
-    results[agent]["rewards"].append(reward)
-    results[agent]['observations'].append(observation)
-    results[agent]['terminations'].append(termination)
-    results[agent]['truncations'].append(truncation)
+    if env.terminated[agent]:
+        results[agent]["rewards"].append(reward)
+        results[agent]['observations'].append(observation)
+        results[agent]['terminations'].append(termination)
+        results[agent]['truncations'].append(truncation)
 
+    # if agent == "captain_0":
+    #     print("\n STEP " + str(env.state_space[int(agent[-1])][2]), agent if termination == False else "*", end=", ")
+    # else:
+    #     print(agent if termination == False else "*", end=", ")
 
-
+print("\n")
 for agent in results:
     print(agent,results[agent])
