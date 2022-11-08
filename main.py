@@ -41,7 +41,11 @@ from digZooClient.digZooClient.server import server
 
 env = server(ipaddr="127.0.0.1",port=8080)
 
-wrap = lambda x: ss.color_reduction_v0(x,mode='B')
+wrap = lambda x: ss.frame_stack_v1(
+    ss.resize_v1(
+    ss.color_reduction_v0(x,mode='B'),x_size=84,y_size=84)
+    , 3)
+
 
 val=env.create_env(domainName="piston",ss_wrapper=wrap,n_pistons=20, time_penalty=-0.1,
                    continuous=True, random_drop=True, random_rotate=True,
@@ -50,6 +54,7 @@ val=env.create_env(domainName="piston",ss_wrapper=wrap,n_pistons=20, time_penalt
 print(val)
 
 env.modelConnect(apiKeys=val["agent_api_keys"])
+model = PPO.load("policy")
 
 looper = True
 while looper:
@@ -60,5 +65,8 @@ while looper:
         break
 
     observation, reward, done, info = env.last(curr_agent)
-    action =
+    action = model.predict(observation, deterministic=True)[0] if not done else None
+    env.step(action)
+    print(reward)
+
 

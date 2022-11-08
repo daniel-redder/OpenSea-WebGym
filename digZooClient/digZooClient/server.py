@@ -57,7 +57,14 @@ class server():
             val = self._request(url, args)
             self.domainName = domainName
             with open(f"{domainName}_{val['env_id']}.pkl","wb") as f:
-                dill.dump()
+                pickle.dump(ss_wrapper,f)
+
+            url = f"{self.ipaddr}:{self.port}/env/supersuit/{domainName}/{val['env_id']}/{val['api_keys'][0]}"
+            file = f"{domainName}_{val['env_id']}.pkl"
+
+            check = requests.post(url = "http://"+url, files=[file])
+
+            return val
 
 
 

@@ -164,6 +164,20 @@ def createInstance(domainName:str, agentCount:int, domain)->[str,[str]]:
 #     #agent_cache.remove()
 
 
+def saveEnv(envID:str, domainName:str, domain):
+
+    key = f"{domainName}_{envID}"
+
+    try:
+        exists = agent_lookup.index(key)
+
+        agent_cache[exists][1] = domain
+        _recache([key,domain])
+
+    except:
+        _cache(domain)
+
+
 
 def getInstance(envID:str, domainName:str, apiKey:str)->Union[bool,Any]:
     """
@@ -186,7 +200,7 @@ def getInstance(envID:str, domainName:str, apiKey:str)->Union[bool,Any]:
 
         #TODO
         #threading here to edit position in memory stack
-        _recache()
+        _recache(agent_cache[exists])
 
         return agent_cache[exists]
 

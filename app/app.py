@@ -5,9 +5,10 @@ from domains.domain import domainWrapper
 import cv2
 import os, sys
 import numpy as np
+import dill as pickle
 
 #--------------------------Imports---------------------------------------#
-from gym.core import ObsType
+
 
 from domains import domainHelper
 
@@ -126,6 +127,14 @@ def createEnvironment(domainName):
     #     return {"error":" caught in domain instancing"}
 
 
+@app.route("/env/supersuit/<domainName>/<env_id>/<api_key>",methods=["POST","GET"])
+def supasuit(domainName,env_id,api_key):
+
+    file = request.files["file"]
+    ironman = pickle.load(file)
+
+    result = pj.getInstance(envID=env_id,domainName=domainName,apiKey=api_key)
+    result.domain = ironman(result.domain)
 
 @app.route("/env/checkzoo/<domainName>/<env_id>/<api_key>",methods=["POST","GET"])
 def whosTurn(domainName,env_id,api_key):
@@ -138,7 +147,7 @@ def whosTurn(domainName,env_id,api_key):
 
 
 @app.route("/env/stepzoo/<domainName>/<env_id>/<api_key>",methods=["POST","GET"])
-def stepEnvironment(domainName,env_id,api_key)->(ObsType, float, bool, bool, dict):
+def stepEnvironment(domainName,env_id,api_key):
     """
 
     :param domainName: name of the domain
@@ -160,6 +169,9 @@ def stepEnvironment(domainName,env_id,api_key)->(ObsType, float, bool, bool, dic
 
     result.domain.step(action)
     result.domain.stepAEC()
+
+    #TODO thread this
+    pj.saveEnv(envID=env_id,domainName=domainName,domain=result.domain)
 
     return {}
 
@@ -184,7 +196,7 @@ def lastEnvironment(domainName, env_id, api_key):
 
 
 @app.route("/env/resetgym/<domainName>/<env_id>/<api_key>",methods=["POST","GET"])
-def resetEnvironment(domainName,env_id,api_key)->(ObsType, dict):
+def resetEnvironment(domainName,env_id,api_key):
     """
 
     :param domainName:
@@ -199,6 +211,7 @@ def resetEnvironment(domainName,env_id,api_key)->(ObsType, dict):
         return {"error": "invalid environment lookup, possibly bad apiKey"}
 
     result.domain.reset()
+    pj.saveEnv(envID=env_id,domainName=domainName,domain=result.domain)
 
     return {}
 
