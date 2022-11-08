@@ -87,7 +87,7 @@ def createEnvironment(domainName):
 
     # if request.method == "POST":
     data = request.get_json()
-    print(data["agentCount"])
+    #print(data["agentCount"])
     # else:
     #     print("test")
     #     data = {}
@@ -95,10 +95,7 @@ def createEnvironment(domainName):
     if not  domainName == request.view_args["domainName"]:
         return {"error":"internal domainName param matching error see createDomain, admin"}
 
-    try:
-        print(data["agentCount"])
-    except:
-        return {"error":"remember to include agentCount"}
+
 
     domainList = domainHelper.getDomainNameList()
 
@@ -113,6 +110,11 @@ def createEnvironment(domainName):
         return {"error":"error in finding environment"}
 
     environment = environment(*data)
+    environment.reset()
+    try:
+        print(data["agentCount"])
+    except:
+        data["agentCount"] = len(environment.agents)
 
     envID, apiKeys = pj.createInstance(domainName=domainName, agentCount=data["agentCount"], domain = environment)
 

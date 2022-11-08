@@ -1,7 +1,7 @@
 import time
 
 import requests
-
+import dill as pickle
 class server():
 
     def __init__(self, ipaddr:str=None, port:int=80):
@@ -37,7 +37,7 @@ class server():
 
 
 
-    def create_env(self,domainName,agentCount,**args):
+    def create_env(self,domainName,ss_wrapper=None,agentCount=None,**args):
         """
         calls model creation
         :return:
@@ -46,11 +46,18 @@ class server():
         if args is None:
             args = {}
 
-        args["agentCount"] = agentCount
+        if not agentCount is None:
+            args["agentCount"] = agentCount
 
-        val = self._request(url,args)
-        self.domainName = domainName
-        return val
+        if ss_wrapper is None:
+            val = self._request(url,args)
+            self.domainName = domainName
+            return val
+        else:
+            val = self._request(url, args)
+            self.domainName = domainName
+            with open(f"{domainName}_{val['env_id']}.pkl","wb") as f:
+                dill.dump()
 
 
 
