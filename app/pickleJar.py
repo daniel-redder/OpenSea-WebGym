@@ -138,7 +138,6 @@ def createInstance(domainName:str, agentCount:int, domain)->[str,[str]]:
     domain = domainWrapper(
         domain = domain,
         envID = envID,
-        agentIndex=0,
         agentAPI= apikeys
     )
 

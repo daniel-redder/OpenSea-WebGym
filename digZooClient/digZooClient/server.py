@@ -1,3 +1,5 @@
+import time
+
 import requests
 
 class server():
@@ -43,26 +45,46 @@ class server():
             print("Environment Creation Failure")
 
 
+    def modelConnect(self,apiKeys:[str],domainName:str=None, envID=None):
+        if domainName is None: domainName = self.domainName
+        else: self.domainName = domainName
+        if envID is None: envID = self.envID
+        else: self.envID = envID
+        self.apiKeys = apiKeys
+
+
+        url = f"{self.ipaddr}:{self.port}/env/configzoo/{self.domainName}/{self.envID}"
+
+        json = {"apiKeys":apiKeys}
+
+        try:
+            val = requests.post(url,json=json)
+            self.agentMap= {val["agents"][i]:apiKeys[i] for i in range(len(apiKeys))}
+        except:
+            print("agent api mapping failed")
 
 
 
 
-    def step(self,action,agentIndex):
+
+
+    def step(self,action,agent):
         """
         sends step to environment
         :return:
         """
-        url = f"{self.ipaddr}:{self.port}/env/stepzoo/{self.domainName}/{self.envID}/{self.apiKeys[agentIndex]}"
+        url = f"{self.ipaddr}:{self.port}/env/stepzoo/{self.domainName}/{self.envID}/{self.agentMap[agent]}"
         json = {"action":action}
 
         try:
             val = requests.post(url,json=json)
+
         except:
             print("failure on step")
 
 
-    def last(self,agentIndex:int):
-        url = f"{self.ipaddr}:{self.port}/env/lastzoo/{self.envID}/{self.apiKeys[agentIndex]}"
+    def last(self,agent):
+        url = f"{self.ipaddr}:{self.port}/env/lastzoo/{self.envID}/{self.agentMap[agent]}"
         json = {}
 
         try:
@@ -73,14 +95,29 @@ class server():
 
 
 
-    def agent_iter(self,ping_test_delay:int):
+    def agent_wait(self,ping_test_delay:int=10):
         """
         waits for turn to act
         :param ping_test_delay:
         :return:
         """
-        pass
-        #TODO
+        url = f"{self.ipaddr}:{self.port}/env/checkzoo/{self.domainName}/{self.envID}/{self.apiKeys[0]}"
+        json = {}
+        agent = ""
+        while not agent in self.agents:
+            try:
+                val=requests.post(url,json=json)
+
+                if "done" in val:
+                    return False
+
+                if val["agent"] in self.agentMap:
+                    return val["agent"]
+            except:
+                print("failure to iter")
+
+            time.sleep(ping_test_delay)
+
 
 
 

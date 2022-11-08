@@ -118,6 +118,14 @@ def createEnvironment(domainName):
 
 
 
+@app.route("/env/checkzoo/<domainName>/<env_id>/<api_key>",methods=["POST"])
+def whosTurn(domainName,env_id,api_key):
+    result = pj.getInstance(envID=env_id, domainName=domainName,apiKey=api_key)
+
+    if result == False:
+        return {"error":"invalid environment lookup, possibly bad apikey"}
+
+    return {"agent":result.currAgent}
 
 
 @app.route("/env/stepzoo/<domainName>/<env_id>/<api_key>",methods=["POST"])
@@ -142,6 +150,7 @@ def stepEnvironment(domainName,env_id,api_key)->(ObsType, float, bool, bool, dic
         return {"error":"no action provided"}
 
     result.domain.step(action)
+    result.domain.stepAEC()
 
     return {}
 
