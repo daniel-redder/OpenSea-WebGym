@@ -1,5 +1,5 @@
 import time
-
+import supersuit as ss
 import requests
 import dill as pickle
 class server():
@@ -85,6 +85,7 @@ class server():
 
         val = self._request(url,json)
         self.agentMap= {val["agents"][i]:apiKeys[i] for i in range(len(apiKeys))}
+        self.agents = [x for x in self.agentMap]
 
 
 
@@ -107,10 +108,9 @@ class server():
 
     def last(self,agent):
         url = f"{self.ipaddr}:{self.port}/env/lastzoo/{self.envID}/{self.agentMap[agent]}"
-        json = {}
 
 
-        val = self._request(url,json)
+        val = self._request(url)
         return val["observation"], val["reward"], val["termination"], val["truncation"], val["info"]
 
 

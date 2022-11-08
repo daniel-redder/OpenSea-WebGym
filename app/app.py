@@ -5,6 +5,7 @@ from domains.domain import domainWrapper
 import cv2
 import os, sys
 import numpy as np
+import supersuit as ss
 import dill as pickle
 
 #--------------------------Imports---------------------------------------#
@@ -152,7 +153,7 @@ def configzoo(domainName, env_id):
     #https://stackoverflow.com/questions/483666/reverse-invert-a-dictionary-mapping
     reverseMap = {v: k for k, v in domain.agentMap.items()}
 
-    return [reverseMap[z] for z in data["apikeys"]]
+    return {"agents":[reverseMap[z] for z in data["apikeys"]]}
 
 @app.route("/env/checkzoo/<domainName>/<env_id>/<api_key>",methods=["POST","GET"])
 def whosTurn(domainName,env_id,api_key):
@@ -203,14 +204,17 @@ def lastEnvironment(domainName, env_id, api_key):
     :param api_key:
     :return:
     """
-    result = pj.getInstance(envID=env_id, domainName=domainName, apiKey=api_key)
+    try:
+        result = pj.getInstance(envID=env_id, domainName=domainName, apiKey=api_key)
 
-    if result == False:
-        return {"error": "invalid environment lookup, possibly bad apiKey"}
+        if result == False:
+            return {"error": "invalid environment lookup, possibly bad apiKey"}
 
-    obs, reward, termination, truncation, info = result.domain.last()
+        obs, reward, termination, truncation, info = result.domain.last()
 
-    return {"observation":obs,"reward":reward,"termination":termination,"truncation":truncation, "info":info}
+        return {"observation":obs,"reward":reward,"termination":termination,"truncation":truncation, "info":info}
+    except Exception as e:
+        print(e)
 
 
 @app.route("/env/resetgym/<domainName>/<env_id>/<api_key>",methods=["POST","GET"])
