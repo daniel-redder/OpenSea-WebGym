@@ -189,23 +189,26 @@ def getInstance(envID:str, domainName:str, apiKey:str)->Union[bool,Any]:
     """
 
     key = f"{domainName}_{envID}"
+    print(key)
+    print(agent_lookup)
 
     try:
         exists = agent_lookup.index(key)
         #exists = agent_cache
 
         #handles faulty apiKey
-        if not apiKey in agent_cache[exists].agentAPI:
+        if not apiKey in agent_cache[exists][1].agentAPI:
             return False
 
         #TODO
         #threading here to edit position in memory stack
         _recache(agent_cache[exists])
 
-        return agent_cache[exists]
+        return agent_cache[exists][1]
 
 
-    except:
+    except Exception as e:
+        print(e, "  expected ")
 
         domain=_loadModel(key)
 
@@ -216,4 +219,4 @@ def getInstance(envID:str, domainName:str, apiKey:str)->Union[bool,Any]:
         if not apiKey in domain.agentAPI:
             return False
 
-        return domain
+        return domain[1]

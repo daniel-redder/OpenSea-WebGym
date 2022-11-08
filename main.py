@@ -1,7 +1,7 @@
 # from pettingzoo.test import api_test
 # from app.domains.shipping_fo import raw_env as shipping_fo
 # from app.domains.connect_four_temp import raw_env as c4
-# import numpy
+import numpy as np
 #
 # env = shipping_fo(8)
 # #env = c4()
@@ -47,14 +47,17 @@ wrap = lambda x: ss.frame_stack_v1(
     , 3)
 
 
-val=env.create_env(domainName="piston",ss_wrapper=wrap,n_pistons=20, time_penalty=-0.1,
+val=env.create_env(domainName="pistonball_v6",ss_wrapper=wrap,n_pistons=20, time_penalty=-0.1,
                    continuous=True, random_drop=True, random_rotate=True,
                    ball_mass=0.75, ball_friction=0.3, ball_elasticity=1.5,
                    max_cycles=125)
 print(val)
 
-env.modelConnect(apiKeys=val["agent_api_keys"])
-model = PPO.load("policy")
+env.modelConnect(apiKeys=val["agent_api_keys"],envID=val["env_id"])
+# model = PPO.load("policy")
+
+
+
 
 looper = True
 while looper:
@@ -65,7 +68,8 @@ while looper:
         break
 
     observation, reward, done, info = env.last(curr_agent)
-    action = model.predict(observation, deterministic=True)[0] if not done else None
+    # action = model.predict(observation, deterministic=True)[0] if not done else None
+    action = np.floor(np.ceil(np.random.normal(loc=0.0,scale=1.0),1.0),-1.0)
     env.step(action)
     print(reward)
 

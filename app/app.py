@@ -110,7 +110,7 @@ def createEnvironment(domainName):
     if environment == False:
         return {"error":"error in finding environment"}
 
-    environment = environment(*data)
+    environment = environment(**data)
     environment.reset()
     try:
         print(data["agentCount"])
@@ -130,11 +130,29 @@ def createEnvironment(domainName):
 @app.route("/env/supersuit/<domainName>/<env_id>/<api_key>",methods=["POST","GET"])
 def supasuit(domainName,env_id,api_key):
 
-    file = request.files["file"]
-    ironman = pickle.load(file)
+    try:
+        file = request.files["file"]
+        ironman = pickle.load(file)
 
-    result = pj.getInstance(envID=env_id,domainName=domainName,apiKey=api_key)
-    result.domain = ironman(result.domain)
+        result = pj.getInstance(envID=env_id,domainName=domainName,apiKey=api_key)
+        result.domain = ironman(result.domain)
+    except Exception as e:
+        print(e)
+        return {"error":"error on supersuit"}
+    return {}
+
+
+@app.route("/env/configzoo/<domainName>/<env_id>",methods=["POST","GET"])
+def configzoo(domainName, env_id):
+    data = request.get_json()
+    domain = pj.getInstance(envID=env_id,domainName=domainName,apiKey=data["apikeys"][0])
+
+    agents = []
+
+    #https://stackoverflow.com/questions/483666/reverse-invert-a-dictionary-mapping
+    reverseMap = {v: k for k, v in domain.agentMap.items()}
+
+    return [reverseMap[z] for z in data["apikeys"]]
 
 @app.route("/env/checkzoo/<domainName>/<env_id>/<api_key>",methods=["POST","GET"])
 def whosTurn(domainName,env_id,api_key):

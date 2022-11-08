@@ -59,10 +59,11 @@ class server():
             with open(f"{domainName}_{val['env_id']}.pkl","wb") as f:
                 pickle.dump(ss_wrapper,f)
 
-            url = f"{self.ipaddr}:{self.port}/env/supersuit/{domainName}/{val['env_id']}/{val['api_keys'][0]}"
-            file = f"{domainName}_{val['env_id']}.pkl"
+            url = f"{self.ipaddr}:{self.port}/env/supersuit/{domainName}/{val['env_id']}/{val['agent_api_keys'][0]}"
+            file_path = f"{domainName}_{val['env_id']}.pkl"
 
-            check = requests.post(url = "http://"+url, files=[file])
+            with open(file_path,"rb") as file:
+                check = requests.post(url = "http://"+url, files={"file":file})
 
             return val
 
@@ -77,9 +78,9 @@ class server():
         self.apiKeys = apiKeys
 
 
-        url = f"{self.ipaddr}:{self.port}/env/configzoo/{self.domainName}/{self.envID}"
+        url = f"{self.ipaddr}:{self.port}/env/configzoo/{self.domainName}/{envID}"
 
-        json = {"apiKeys":apiKeys}
+        json = {"apikeys":apiKeys}
 
 
         val = self._request(url,json)

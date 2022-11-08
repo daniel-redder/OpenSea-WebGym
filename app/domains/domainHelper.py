@@ -6,7 +6,7 @@ import importlib
 domain_name_list = {
     "connect_four_temp":"domains.connect_four_temp",
     "kaz":"pettingzoo.butterfly.knights_archers_zombies_v10",
-    "piston":"pettingzoo.butterfly.pistonball_v5"
+    "pistonball_v6":"pettingzoo.butterfly.pistonball_v6"
 }
 
 
