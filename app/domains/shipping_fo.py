@@ -50,6 +50,8 @@ class raw_env(AECEnv):
               "route": spaces.Discrete(route_count),
               "dist": spaces.Discrete(int(avg_route_len + avg_route_len * 0.15 * 4)),
               "step": spaces.Discrete(int((avg_route_len + avg_route_len * 0.15 * 4) * 2)),
+              "flotsam": spaces.Discrete(2),
+              "storm": spaces.Discrete(2)
             }
           )
           # spaces.Dict(
@@ -77,20 +79,25 @@ class raw_env(AECEnv):
 
     np.random.seed(seed)
 
-    #list of :routes: (len of each route,piracy chance per tick, storm chance per tick)
+    # list of :routes: (len of each route,piracy chance per tick, storm chance per tick)
     self.routes = [(int(np.random.normal(loc=self.avg_route_len, scale=0.15*self.avg_route_len)), np.random.normal(loc=self.move_speed/self.avg_route_len*self.avg_piracy,scale=0.35*self.move_speed/self.avg_route_len*self.avg_piracy), True if np.random.random() < self.freq_storm else False, np.random.normal(loc=self.move_speed/self.avg_route_len*self.avg_storm,scale=0.35*self.move_speed/self.avg_route_len*self.avg_storm)) for x in   range(self.route_count)]
 
-    self.flotsam = [[0 for x in range(y[0])] for y in self.routes]
+    # flotsam count per route
+    self.flotsam = [0 for i in self.routes]
+    self.flotsam_lifetime = 10
+    self.flotsam_ttl = self.flotsam_lifetime
 
     #The position of all agents (current route, distance along route, number of steps)
     self.state_space = [[int(np.random.random()*len(self.routes)), 0, 0] for i in self.agents]
-
+    
   def observe(self, agent):
     return {
       "observation": {
         "route": self.state_space[self.agents.index(agent)][0],
         "dist": self.state_space[self.agents.index(agent)][1],
-        "step": self.state_space[self.agents.index(agent)][2]
+        "step": self.state_space[self.agents.index(agent)][2],
+        "flotsam": 1 if self.flotsam[self.state_space[self.agents.index(agent)][0]] > 0 else 0,
+        "storm": 1 if self.routes[self.state_space[self.agents.index(agent)][0]][2] else 0
       }
     }
 
@@ -101,7 +108,21 @@ class raw_env(AECEnv):
     return self.action_spaces[agent]
 
   def step(self, action):
+
+    # handle per-turn events
+    if self.agents.index(self.agent_selection) == 0:
+      # flotsam decay
+      if self.flotsam_ttl == 0:
+        for i in self.flotsam:
+          i = 0 if i <= 0 else i - 1
+        self.flotsam_ttl = self.flotsam_lifetime
+      else:
+        self.flotsam_ttl -= 1
+
+    # handle per-ship actions
     if not self.terminated[self.agent_selection]:
+      
+      # active ship
       if self.truncations[self.agent_selection] or self.terminations[self.agent_selection]:
         return self._was_dead_step(action)
 
@@ -124,23 +145,29 @@ class raw_env(AECEnv):
           
       # check if theres storm damage
       if self.routes[self.state_space[ship_index][0]][2] and np.random.random() < self.routes[self.state_space[ship_index][0]][3]:
-          self.flotsam[self.state_space[ship_index][0]] = 1
+          self.flotsam[self.state_space[ship_index][0]] += 1
 
       # print(ship + " at " + str(self.state_space[ship_index][1] / self.state_space[ship_index][2] if self.state_space[ship_index][2] != 0 else 0))
 
       # check if there's a pirate attack
       if np.random.random() < self.routes[self.state_space[ship_index][0]][1] and not brace:
-        self.flotsam[self.state_space[ship_index][0]] = 1
+        self.flotsam[self.state_space[ship_index][0]] += 1
         self.rewards[ship] -= self.state_space[ship_index][2] / self.state_space[ship_index][1] if self.state_space[ship_index][1] != 0 else 0 # lose reward = -1*steps/dist
-        print(ship + " scored " + str(self.rewards[ship]))
+        # print(ship + " scored " + str(self.rewards[ship]))
         self.terminated[ship] = True
+        self.terminations[ship] = True
 
       # check if route has been completed
       if self.routes[self.state_space[ship_index][0]][0] < self.state_space[ship_index][1]:
         self.rewards[ship] += self.state_space[ship_index][1] / self.state_space[ship_index][2] if self.state_space[ship_index][2] != 0 else 0 # win reward = dist/steps
-        print(ship + " scored " + str(self.rewards[ship]))
+        # print(ship + " scored " + str(self.rewards[ship]))
         self.terminated[ship] = True
+        self.terminations[ship] = True
+
+    # inactive ship
     else:
+
+      # check if done
       all_dead = True
       last_alive = None
       for i in self.terminated:
@@ -149,8 +176,7 @@ class raw_env(AECEnv):
           last_alive = i
           break
 
-      print("all dead" if all_dead else last_alive)
-      
+      # terminate if done
       if all_dead:
         self.terminations = {i: True for i in self.agents}
         return self._was_dead_step(None)        
