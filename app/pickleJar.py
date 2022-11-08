@@ -43,7 +43,7 @@ from domains.connect_four_temp import raw_env as env
 #TODO temporary remove
 testenv = env()
 
-agent_cache = [["key",domainWrapper(envID=_getEnvID(),agentAPI=["abcdaa","1qsdgqwef","asefawef1"],domain=testenv)]]
+agent_cache = []
 
 
 
@@ -69,7 +69,8 @@ def _saveModel(domain:[str,domainWrapper]):
     :param domain:
     :return:
     """
-    pickle.dump(domain[1],"data/"+domain[0])
+    with open("domains/data/"+domain[0]+".pkl","wb") as f:
+        pickle.dump(domain[1],f)
 
 
 def _loadModel(domainPathName:str)->domainWrapper:
@@ -78,7 +79,8 @@ def _loadModel(domainPathName:str)->domainWrapper:
     :param domainPathName:
     :return:
     """
-    return pickle.load("data/"+domainPathName)
+    with open("domains/data/"+domainPathName+".pkl","rb") as f:
+        return pickle.load(f)
 
 
 

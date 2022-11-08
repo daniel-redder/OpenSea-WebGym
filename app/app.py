@@ -70,7 +70,7 @@ def details(envID):
 #------------------------------- API CALLS ----------------------------------------------------------------
 
 
-@app.route("/ping",methods=["POST"])
+@app.route("/ping",methods=["POST","GET"])
 def ping():
     return {"message":"successful connection"}
 
@@ -85,18 +85,18 @@ def createEnvironment(domainName):
     :return: Json list of api keys and instance id || error
     """
 
-    if request.method == "POST":
-        data = request.get_json()
-
-    else:
-        print("test")
-        data = {}
+    # if request.method == "POST":
+    data = request.get_json()
+    print(data["agentCount"])
+    # else:
+    #     print("test")
+    #     data = {}
 
     if not  domainName == request.view_args["domainName"]:
         return {"error":"internal domainName param matching error see createDomain, admin"}
 
     try:
-        print(request.view_args["agentCount"])
+        print(data["agentCount"])
     except:
         return {"error":"remember to include agentCount"}
 
@@ -105,20 +105,27 @@ def createEnvironment(domainName):
     if not domainName in domainList:
         return {"error":"domain not found"}
 
-    try:
+    #try:
 
-        environment=domainHelper.getConstructor(domainName)(*data)
-        envID, apiKeys = pj.createInstance(domainName=domainName, agentCount=request.view_args["agentCount"], domain = environment)
+    environment=domainHelper.getConstructor(domainName)
 
-        return {"agent_api_keys":apiKeys,"env_id":envID}
+    if environment == False:
+        return {"error":"error in finding environment"}
+
+    environment = environment(*data)
+
+    envID, apiKeys = pj.createInstance(domainName=domainName, agentCount=data["agentCount"], domain = environment)
+
+    return {"agent_api_keys":apiKeys,"env_id":envID}
 
 
-    except Exception as e:
-        return {"error":e+" caught in domain instancing"}
+    # except Exception as e:
+    #     print(e)
+    #     return {"error":" caught in domain instancing"}
 
 
 
-@app.route("/env/checkzoo/<domainName>/<env_id>/<api_key>",methods=["POST"])
+@app.route("/env/checkzoo/<domainName>/<env_id>/<api_key>",methods=["POST","GET"])
 def whosTurn(domainName,env_id,api_key):
     result = pj.getInstance(envID=env_id, domainName=domainName,apiKey=api_key)
 
@@ -128,7 +135,7 @@ def whosTurn(domainName,env_id,api_key):
     return {"agent":result.currAgent}
 
 
-@app.route("/env/stepzoo/<domainName>/<env_id>/<api_key>",methods=["POST"])
+@app.route("/env/stepzoo/<domainName>/<env_id>/<api_key>",methods=["POST","GET"])
 def stepEnvironment(domainName,env_id,api_key)->(ObsType, float, bool, bool, dict):
     """
 
@@ -155,7 +162,7 @@ def stepEnvironment(domainName,env_id,api_key)->(ObsType, float, bool, bool, dic
     return {}
 
 
-@app.route("/env/lastzoo/<domainName>/<env_id>/<api_key>")
+@app.route("/env/lastzoo/<domainName>/<env_id>/<api_key>",methods=["POST","GET"])
 def lastEnvironment(domainName, env_id, api_key):
     """
 
@@ -174,7 +181,7 @@ def lastEnvironment(domainName, env_id, api_key):
     return {"observation":obs,"reward":reward,"termination":termination,"truncation":truncation, "info":info}
 
 
-@app.route("/env/resetgym/<domainName>/<env_id>/<api_key>")
+@app.route("/env/resetgym/<domainName>/<env_id>/<api_key>",methods=["POST","GET"])
 def resetEnvironment(domainName,env_id,api_key)->(ObsType, dict):
     """
 

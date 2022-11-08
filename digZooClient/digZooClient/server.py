@@ -15,17 +15,26 @@ class server():
         self.domainName = None
         #-----------------------------------------------
 
+
+    def _request(self,url,json=None,error="standard connection error"):
+        try:
+            if json is None: return requests.post(url="http://"+url).json()
+            return requests.post(url="http://"+url,json=json).json()
+        except Exception as e:
+            print(error, e)
+            print(f"{url}, {json}")
+            assert False, "error on request"
+
     def test_connection(self):
         """
         attempts to connect to the server with given specifications
         :return:
         """
+        url = f"{self.ipaddr}:{self.port}/ping"
 
-        try:
-            val = requests.post(self.ipaddr+self.port+"/ping",json={})
-            print(val)
-        except:
-            print("connection failure")
+        val = self._request(url)
+        print(val)
+
 
 
     def create_env(self,domainName,agentCount,**args):
@@ -34,15 +43,16 @@ class server():
         :return:
         """
         url = f"{self.ipaddr}:{self.port}/env/createzoo/{domainName}"
+        if args is None:
+            args = {}
+
         args["agentCount"] = agentCount
 
-        try:
-            val = requests.post(url, json=args)
-            self.domainName = domainName
-            return val
+        val = self._request(url,args)
+        self.domainName = domainName
+        return val
 
-        except:
-            print("Environment Creation Failure")
+
 
 
     def modelConnect(self,apiKeys:[str],domainName:str=None, envID=None):
@@ -57,11 +67,10 @@ class server():
 
         json = {"apiKeys":apiKeys}
 
-        try:
-            val = requests.post(url,json=json)
-            self.agentMap= {val["agents"][i]:apiKeys[i] for i in range(len(apiKeys))}
-        except:
-            print("agent api mapping failed")
+
+        val = self._request(url,json)
+        self.agentMap= {val["agents"][i]:apiKeys[i] for i in range(len(apiKeys))}
+
 
 
 
@@ -76,22 +85,19 @@ class server():
         url = f"{self.ipaddr}:{self.port}/env/stepzoo/{self.domainName}/{self.envID}/{self.agentMap[agent]}"
         json = {"action":action}
 
-        try:
-            val = requests.post(url,json=json)
 
-        except:
-            print("failure on step")
+        val = self._request(url,json)
+
 
 
     def last(self,agent):
         url = f"{self.ipaddr}:{self.port}/env/lastzoo/{self.envID}/{self.agentMap[agent]}"
         json = {}
 
-        try:
-            val = requests.post(url,json=json)
-            return val["observation"], val["reward"], val["termination"], val["truncation"], val["info"]
-        except:
-            print("last failure")
+
+        val = self._request(url,json)
+        return val["observation"], val["reward"], val["termination"], val["truncation"], val["info"]
+
 
 
 
@@ -106,7 +112,7 @@ class server():
         agent = ""
         while not agent in self.agents:
             try:
-                val=requests.post(url,json=json)
+                val=self._request(url,json)
 
                 if "done" in val:
                     return False
@@ -132,6 +138,6 @@ class server():
         json = {}
 
         try:
-            val = requests.post(url, json=json)
+            val = self._request(url,json)
         except:
             print("error in reset")

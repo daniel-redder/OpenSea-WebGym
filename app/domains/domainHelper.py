@@ -1,19 +1,23 @@
 from typing import Callable
-
+import importlib
 
 
 
 domain_name_list = {
-    "connect_four_temp"
+    "connect_four_temp":"domains.connect_four_temp"
 }
 
+
+def getDomainNameList():
+    return domain_name_list
 
 
 def getConstructor(domainName):
     try:
-        con = __import__(domain_name_list[domainName]).env
+        con = importlib.import_module(domain_name_list[domainName]).env
         return con
 
 
-    except:
+    except Exception as e:
+        print(e)
         return False

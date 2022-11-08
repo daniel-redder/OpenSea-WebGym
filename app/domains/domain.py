@@ -12,8 +12,9 @@ class domainWrapper():
 
         self.envID = envID
         self.agentAPI = agentAPI
+        self.domain.reset()
         self.agentMap = {str(self.domain.agents[i]):self.agentAPI[i] for i in range(len(self.domain.agents))}
-        self.agentIterable = domain.agent_iter()
+        self.agentIterable = iter(domain.agent_iter())
         self.stepAEC()
 
         self.creationDate = datetime.now() #test loading
