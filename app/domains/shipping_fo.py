@@ -26,7 +26,7 @@ class raw_env(AECEnv):
     brace_for_pirates: 0 (don't brace and ship moves normally) 1 (brace and ship slows)
     """
     self.action_spaces = {
-      i: spaces.Discrete(4)
+      i: spaces.Discrete(4)#2*self.route_count)
       # spaces.Dict(
       #   {
       #     "route": spaces.Discrete(2),
@@ -80,7 +80,12 @@ class raw_env(AECEnv):
     np.random.seed(seed)
 
     # list of :routes: (len of each route,piracy chance per tick, storm chance per tick)
-    self.routes = [(int(np.random.normal(loc=self.avg_route_len, scale=0.15*self.avg_route_len)), np.random.normal(loc=self.move_speed/self.avg_route_len*self.avg_piracy,scale=0.35*self.move_speed/self.avg_route_len*self.avg_piracy), True if np.random.random() < self.freq_storm else False, np.random.normal(loc=self.move_speed/self.avg_route_len*self.avg_storm,scale=0.35*self.move_speed/self.avg_route_len*self.avg_storm)) for x in   range(self.route_count)]
+    self.routes = [
+      (int(np.random.normal(loc=self.avg_route_len, scale=0.15*self.avg_route_len)), 
+      np.random.normal(loc=self.move_speed/self.avg_route_len*self.avg_piracy,scale=0.35*self.move_speed/self.avg_route_len*self.avg_piracy), 
+      True if np.random.random() < self.freq_storm else False, 
+      np.random.normal(loc=self.move_speed/self.avg_route_len*self.avg_storm,scale=0.35*self.move_speed/self.avg_route_len*self.avg_storm)) for x in   range(self.route_count)
+    ]
 
     # flotsam count per route
     self.flotsam = [0 for i in self.routes]
@@ -88,7 +93,7 @@ class raw_env(AECEnv):
     self.flotsam_ttl = self.flotsam_lifetime
 
     #The position of all agents (current route, distance along route, number of steps)
-    self.state_space = [[int(np.random.random()*len(self.routes)), 0, 0] for i in self.agents]
+    self.state_space = [[int(np.random.random()*self.route_count), 0, 0] for i in self.agents]
     
   def observe(self, agent):
     return {
@@ -130,7 +135,7 @@ class raw_env(AECEnv):
       ship_index = self.agents.index(ship)
       
       #print(ship+" a="+str(action))
-      change_route = action%2
+      change_route = action%2#self.route_count
       brace = action/2
       
       # determine route progress
@@ -138,8 +143,10 @@ class raw_env(AECEnv):
       self.state_space[ship_index][2] += 1
       # if last != self.state_space[ship_index][2]:
       #   print(ship, self.state_space[ship_index][2])
+      # if change_route != self.state_space[ship_index][0]:
+      #   self.state_space[ship_index][0] = change_route
       if change_route:
-        self.state_space[ship_index][0] = (self.state_space[ship_index][0] + 1) % len(self.routes)
+        self.state_space[ship_index][0] = np.random.randint(self.route_count)
       else:
         if brace:
           self.state_space[ship_index][1] += int(self.move_speed / 2)
@@ -169,6 +176,9 @@ class raw_env(AECEnv):
 
     # inactive ship
     else:
+
+      # stop excess reward accumulation
+      self.rewards[self.agent_selection] = 0
 
       # check if done
       all_dead = True
