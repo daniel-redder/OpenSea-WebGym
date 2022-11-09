@@ -9,7 +9,7 @@ class domainWrapper():
         """
         self.domain = domain
         self.uniqueName = uniqueName or domain.metadata['name']
-
+        self.isDone = False
         self.envID = envID
         self.agentAPI = agentAPI
 
@@ -23,6 +23,15 @@ class domainWrapper():
 
 
     def stepAEC(self):
-        self.currAgent = next(self.agentIterable)
-      
+        try:
+            self.currAgent = next(self.agentIterable)
+            return False
+        except:
+            self.isDone = True
+            return True
+
+    def reset(self):
+        self.isDone = False
+        self.agentIterable = iter(self.domain.agent_iter())
+        self.stepAEC()
 

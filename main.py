@@ -1,6 +1,8 @@
 # from pettingzoo.test import api_test
 # from app.domains.shipping_fo import raw_env as shipping_fo
 # from app.domains.connect_four_temp import raw_env as c4
+import random
+
 import numpy as np
 #
 # env = shipping_fo(8)
@@ -47,30 +49,60 @@ wrap = lambda x: ss.frame_stack_v1(
     , 3)
 
 
-val=env.create_env(domainName="pistonball_v6",ss_wrapper=wrap,n_pistons=20, time_penalty=-0.1,
-                   continuous=True, random_drop=True, random_rotate=True,
-                   ball_mass=0.75, ball_friction=0.3, ball_elasticity=1.5,
-                   max_cycles=125)
-print(val)
+# val=env.create_env(domainName="pistonball_v6",ss_wrapper=wrap,n_pistons=20, time_penalty=-0.1,
+#                    continuous=True, random_drop=True, random_rotate=True,
+#                    ball_mass=0.75, ball_friction=0.3, ball_elasticity=1.5,
+#                    max_cycles=125)
+# print(val)
+#
+# env.modelConnect(apiKeys=val["agent_api_keys"],envID=val["env_id"])
+# # model = PPO.load("policy")
 
-env.modelConnect(apiKeys=val["agent_api_keys"],envID=val["env_id"])
-# model = PPO.load("policy")
 
-
-
+from datetime import datetime
 
 looper = True
-while looper:
-    curr_agent = env.agent_wait()
 
-    if curr_agent == False:
-        looper = False
-        break
+record=[]
 
-    observation, reward, done, info = env.last(curr_agent)
-    # action = model.predict(observation, deterministic=True)[0] if not done else None
-    action = np.floor(np.ceil(np.random.normal(loc=0.0,scale=1.0),1.0),-1.0)
-    env.step(action)
-    print(reward)
+old_val = None
+
+for p in range(100):
+
+    looper = True
+    val = env.create_env(domainName="pistonball_v6", ss_wrapper=wrap, n_pistons=20, time_penalty=-0.1,
+                         continuous=True, random_drop=True, random_rotate=True,
+                         ball_mass=0.75, ball_friction=0.3, ball_elasticity=1.5,
+                         max_cycles=125)
+
+    # if not old_val is None:
+    #     val["agent_api_keys"]=old_val["agent_api_keys"]
+
+
+    env.modelConnect(apiKeys=val["agent_api_keys"], envID=val["env_id"])
+
+
+    env.reset()
+    start = datetime.now()
+    while looper:
+        curr_agent = env.agent_wait()
+
+        if curr_agent == False:
+            looper = False
+            break
+
+        observation, reward, term, trunc, info = env.last(curr_agent)
+        print(info)
+        # action = model.predict(observation, deterministic=True)[0] if not done else None
+        action = np.array(round(random.uniform(-1.00,1.00),2))
+        env.step(action,curr_agent)
+    end = datetime.now()
+    record.append(end-start)
+
+    print(f"\n --------{p}---------- \n")
+
+    old_val = val
+
+print(record)
 
 

@@ -7,6 +7,10 @@ import os, sys
 import numpy as np
 import supersuit as ss
 import dill as pickle
+import jsonpickle
+import jsonpickle.ext.numpy as jsonpickle_numpy
+
+jsonpickle_numpy.register_handlers()
 
 #--------------------------Imports---------------------------------------#
 
@@ -137,6 +141,7 @@ def supasuit(domainName,env_id,api_key):
 
         result = pj.getInstance(envID=env_id,domainName=domainName,apiKey=api_key)
         result.domain = ironman(result.domain)
+        pj.saveEnv(envID=env_id,domainName=domainName,domain = result)
     except Exception as e:
         print(e)
         return {"error":"error on supersuit"}
@@ -162,6 +167,9 @@ def whosTurn(domainName,env_id,api_key):
     if result == False:
         return {"error":"invalid environment lookup, possibly bad apikey"}
 
+    if result.isDone:
+        return {"done":"yes"}
+
     return {"agent":result.currAgent}
 
 
@@ -182,17 +190,33 @@ def stepEnvironment(domainName,env_id,api_key):
         return {"error":"invalid environment lookup, possibly bad apiKey"}
 
     try:
-        action = request.get_json()["action"]
+        action = jsonpickle.decode(request.get_json())
     except:
         return {"error":"no action provided"}
 
     result.domain.step(action)
-    result.domain.stepAEC()
+    #result.domain.render()
+    done=result.stepAEC()
+
+
 
     #TODO thread this
-    pj.saveEnv(envID=env_id,domainName=domainName,domain=result.domain)
+    pj.saveEnv(envID=env_id,domainName=domainName,domain=result)
+
+    if done:
+        return {"done":"yes"}
 
     return {}
+
+
+
+class outputResults():
+    def __init__(self,obs,rew,term,trun,info):
+        self.obs = obs
+        self.rew = rew
+        self.term = term
+        self.trun = trun
+        self.info = info
 
 
 @app.route("/env/lastzoo/<domainName>/<env_id>/<api_key>",methods=["POST","GET"])
@@ -212,9 +236,17 @@ def lastEnvironment(domainName, env_id, api_key):
 
         obs, reward, termination, truncation, info = result.domain.last()
 
-        return {"observation":obs,"reward":reward,"termination":termination,"truncation":truncation, "info":info}
+        output = {"observation":jsonpickle.encode(obs),"reward":reward,"termination":termination,"truncation":truncation, "info":info}
+        #output = outputResults(obs,reward,termination,truncation,info)
+        #output=jsonpickle.encode(output)
+
+
+        #print(output)
+
+        return output
     except Exception as e:
         print(e)
+        return {"error":"failure in last environment rewards calc"}
 
 
 @app.route("/env/resetgym/<domainName>/<env_id>/<api_key>",methods=["POST","GET"])
@@ -233,7 +265,8 @@ def resetEnvironment(domainName,env_id,api_key):
         return {"error": "invalid environment lookup, possibly bad apiKey"}
 
     result.domain.reset()
-    pj.saveEnv(envID=env_id,domainName=domainName,domain=result.domain)
+    result.reset()
+    pj.saveEnv(envID=env_id,domainName=domainName,domain=result)
 
     return {}
 

@@ -1,3 +1,4 @@
+import random
 import sqlite3 as sql
 import secrets
 import os
@@ -8,7 +9,7 @@ import supersuit as ss
 
 
 #the number of agents kept in memory
-AGENT_CACHE_LIMIT= 3
+AGENT_CACHE_LIMIT= 1
 
 #using LRU for caching
 
@@ -69,8 +70,10 @@ def _saveModel(domain:[str,domainWrapper]):
     :param domain:
     :return:
     """
-    with open("domains/data/"+domain[0]+".pkl","wb") as f:
-        pickle.dump(domain[1],f)
+    pass
+    #TODO temporary bypass ss breaks this
+    # with open("domains/data/"+domain[0]+".pkl","wb") as f:
+    #     pickle.dump(domain[1],f)
 
 
 def _loadModel(domainPathName:str)->domainWrapper:
@@ -135,7 +138,7 @@ def createInstance(domainName:str, agentCount:int, domain)->[str,[str]]:
     apikeys = [str(secrets.token_urlsafe(5)) for x in range(agentCount)]
 
 
-    envID = _getEnvID()
+    envID = f"{_getEnvID()}{random.randint(1,1000)}"
 
     domain = domainWrapper(
         domain = domain,
@@ -189,16 +192,22 @@ def getInstance(envID:str, domainName:str, apiKey:str)->Union[bool,Any]:
     """
 
     key = f"{domainName}_{envID}"
-    print(key)
-    print(agent_lookup)
+    # print(key)
+    # print(agent_lookup)
+
+    for x in agent_lookup:
+        print(agent_cache[agent_lookup.index(x)][1].agentAPI,x)
+
 
     try:
         exists = agent_lookup.index(key)
         #exists = agent_cache
 
+        print(type(agent_cache[exists][1]))
+        print(agent_cache[exists][1].agentAPI)
         #handles faulty apiKey
-        if not apiKey in agent_cache[exists][1].agentAPI:
-            return False
+        # if not apiKey in agent_cache[exists][1].agentAPI:
+        #     return False
 
         #TODO
         #threading here to edit position in memory stack

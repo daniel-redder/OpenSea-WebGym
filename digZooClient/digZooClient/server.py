@@ -2,6 +2,11 @@ import time
 import supersuit as ss
 import requests
 import dill as pickle
+import jsonpickle
+import jsonpickle.ext.numpy as jsonpickle_numpy
+
+jsonpickle_numpy.register_handlers()
+
 class server():
 
     def __init__(self, ipaddr:str=None, port:int=80):
@@ -99,19 +104,29 @@ class server():
         :return:
         """
         url = f"{self.ipaddr}:{self.port}/env/stepzoo/{self.domainName}/{self.envID}/{self.agentMap[agent]}"
-        json = {"action":action}
+        json = jsonpickle.encode(action)
 
 
         val = self._request(url,json)
 
+        if "done" in val:
+            return True
+        return False
+
 
 
     def last(self,agent):
-        url = f"{self.ipaddr}:{self.port}/env/lastzoo/{self.envID}/{self.agentMap[agent]}"
+        url = f"{self.ipaddr}:{self.port}/env/lastzoo/{self.domainName}/{self.envID}/{self.agentMap[agent]}"
 
 
         val = self._request(url)
-        return val["observation"], val["reward"], val["termination"], val["truncation"], val["info"]
+        #print(val)
+        #return val.obs, val.rew, val.term, val.trunc, val.info
+
+        #print(jsonpickle.decode(val["observation"]))
+        #print("0-------")
+
+        return jsonpickle.decode(val["observation"]), val["reward"], val["termination"], val["truncation"], val["info"]
 
 
 
