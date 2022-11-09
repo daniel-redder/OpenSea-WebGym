@@ -92,7 +92,7 @@ for p in range(100):
             break
 
         observation, reward, term, trunc, info = env.last(curr_agent)
-        print(info)
+        #print(info)
         # action = model.predict(observation, deterministic=True)[0] if not done else None
         action = np.array(round(random.uniform(-1.00,1.00),2))
         env.step(action,curr_agent)

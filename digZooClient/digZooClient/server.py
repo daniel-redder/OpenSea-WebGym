@@ -38,7 +38,7 @@ class server():
         url = f"{self.ipaddr}:{self.port}/ping"
 
         val = self._request(url)
-        print(val)
+        #print(val)
 
 
 
