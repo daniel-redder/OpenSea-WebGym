@@ -20,6 +20,21 @@ class raw_env(AECEnv):
     self.avg_piracy = avg_piracy
     self.freq_storm = freq_storm
     self.avg_storm = avg_storm
+    
+    """
+    change_route: index of route+1 or 0 for remain
+    brace_for_pirates: 0 (don't brace and ship moves normally) 1 (brace and ship slows)
+    """
+    self.action_spaces = {
+      i: spaces.Discrete(4)#2*self.route_count)
+      # spaces.Dict(
+      #   {
+      #     "route": spaces.Discrete(2),
+      #     "brace": spaces.Discrete(2)
+      #   }
+      #)
+       for i in self.agents
+    }
 
     """
     flotsam:bool (curr route)
@@ -33,25 +48,18 @@ class raw_env(AECEnv):
           "observation": spaces.Dict(
             {
               "route": spaces.Discrete(route_count),
-              "dist": spaces.Discrete(int(avg_route_len + 0.15 * 4)),
-              "step": spaces.Discrete(int(avg_route_len + 0.15 * 4 * 2)),
+              "dist": spaces.Discrete(int(avg_route_len + avg_route_len * 0.15 * 4)),
+              "step": spaces.Discrete(int((avg_route_len + avg_route_len * 0.15 * 4) * 2)),
+              "flotsam": spaces.Discrete(2),
+              "storm": spaces.Discrete(2)
             }
-          ),
-          "action_mask": spaces.MultiBinary(2)
-        }
-      ) for i in self.agents
-    }
-
-    
-    """
-    change_route: index of route+1 or 0 for remain
-    brace_for_pirates: 0 (don't brace and ship moves normally) 1 (brace and ship slows)
-    """
-    self.action_spaces = {
-      i: spaces.Dict(
-        {
-          "route": spaces.Discrete(2),
-          "brace": spaces.Discrete(2)
+          )
+          # spaces.Dict(
+          #   {
+          #     "route": spaces.Discrete(2),
+          #     "brace": spaces.Discrete(2)
+          #   }
+          # )
         }
       ) for i in self.agents
     }
@@ -64,28 +72,38 @@ class raw_env(AECEnv):
     self._cumulative_rewards = {name: 0 for name in self.agents}
     self.truncations = {i: False for i in self.agents}
     self.terminations = {i: False for i in self.agents}
+    self.terminated = {i: False for i in self.agents}
     self.infos = {i: {} for i in self.agents}
     self._agent_selector = agent_selector(self.agents)
     self.agent_selection = self._agent_selector.reset()
 
     np.random.seed(seed)
 
-    #list of :routes: (len of each route,piracy chance per tick, storm chance per tick)
-    self.routes = [(int(np.random.normal(loc=self.avg_route_len, scale=0.15*self.avg_route_len)), np.random.normal(loc=self.move_speed/self.avg_route_len*self.avg_piracy,scale=0.35*self.move_speed/self.avg_route_len*self.avg_piracy), True if np.random.random() < self.freq_storm else False, np.random.normal(loc=self.move_speed/self.avg_route_len*self.avg_storm,scale=0.35*self.move_speed/self.avg_route_len*self.avg_storm)) for x in   range(self.route_count)]
+    # list of :routes: (len of each route,piracy chance per tick, storm chance per tick)
+    self.routes = [
+      (int(np.random.normal(loc=self.avg_route_len, scale=0.15*self.avg_route_len)), 
+      np.random.normal(loc=self.move_speed/self.avg_route_len*self.avg_piracy,scale=0.35*self.move_speed/self.avg_route_len*self.avg_piracy), 
+      True if np.random.random() < self.freq_storm else False, 
+      np.random.normal(loc=self.move_speed/self.avg_route_len*self.avg_storm,scale=0.35*self.move_speed/self.avg_route_len*self.avg_storm)) for x in   range(self.route_count)
+    ]
 
-    self.flotsam = [[0 for x in range(y[0])] for y in self.routes]
+    # flotsam count per route
+    self.flotsam = [0 for i in self.routes]
+    self.flotsam_lifetime = 10
+    self.flotsam_ttl = self.flotsam_lifetime
 
     #The position of all agents (current route, distance along route, number of steps)
-    self.state_space = [[int(np.random.random()*len(self.routes)), 0, 0] for i in self.agents]
-
+    self.state_space = [[int(np.random.random()*self.route_count), 0, 0] for i in self.agents]
+    
   def observe(self, agent):
     return {
       "observation": {
         "route": self.state_space[self.agents.index(agent)][0],
         "dist": self.state_space[self.agents.index(agent)][1],
-        "step": self.state_space[self.agents.index(agent)][2]
-      },
-      "action_mask": (1,1)
+        "step": self.state_space[self.agents.index(agent)][2],
+        "flotsam": 1 if self.flotsam[self.state_space[self.agents.index(agent)][0]] > 0 else 0,
+        "storm": 1 if self.routes[self.state_space[self.agents.index(agent)][0]][2] else 0
+      }
     }
 
   def observation_space(self, agent):
@@ -96,52 +114,89 @@ class raw_env(AECEnv):
 
   def step(self, action):
 
-    if (
-      self.truncations[self.agent_selection]
-      or self.terminations[self.agent_selection]
-      ):
-      return self._was_dead_step(action)
+    # handle per-turn events
+    if self.agents.index(self.agent_selection) == 0:
+      # flotsam decay
+      if self.flotsam_ttl == 0:
+        for i in self.flotsam:
+          i = 0 if i <= 0 else i - 1
+        self.flotsam_ttl = self.flotsam_lifetime
+      else:
+        self.flotsam_ttl -= 1
 
-    ship = self.agent_selection
-    ship_index = self.agents.index(ship)
-    
-    change_route = action["route"]
-    brace = action["brace"]
-    
-    # determine route progress
-    self.state_space[ship_index][2] += 1
-    if change_route:
-      self.state_space[ship_index][0] = (self.state_space[ship_index][0] + 1) % len(self.routes)
-    else:
-      if brace:
-        self.state_space[ship_index][1] += self.move_speed / 2
-      else: 
-        self.state_space[ship_index][1] += self.move_speed
-        
-    # check if theres storm damage
-    if self.routes[self.state_space[ship_index][0]][2] and np.random.random() < self.routes[self.state_space[ship_index][0]][3]:
-        self.flotsam[self.state_space[ship_index][0]] = 1
+    # handle per-ship actions
+    if not self.terminated[self.agent_selection]:
       
-    # check if there's a pirate attack
-    if np.random.random() < self.routes[self.state_space[ship_index][0]][1] and not brace:
-        self.flotsam[self.state_space[ship_index][0]] = 1
-        self.rewards[ship] -= self.state_space[ship_index][2] / self.state_space[ship_index][1] # lose reward = -1*steps/dist
-        print(ship + "=" + str(self.rewards[ship]))
+      # active ship
+      if self.truncations[self.agent_selection] or self.terminations[self.agent_selection]:
+        return self._was_dead_step(action)
+
+      ship = self.agent_selection
+      ship_index = self.agents.index(ship)
+      
+      #print(ship+" a="+str(action))
+      change_route = action%2#self.route_count
+      brace = action/2
+      
+      # determine route progress
+      # last = self.state_space[ship_index][2]
+      self.state_space[ship_index][2] += 1
+      # if last != self.state_space[ship_index][2]:
+      #   print(ship, self.state_space[ship_index][2])
+      # if change_route != self.state_space[ship_index][0]:
+      #   self.state_space[ship_index][0] = change_route
+      if change_route:
+        self.state_space[ship_index][0] = np.random.randint(self.route_count)
+      else:
+        if brace:
+          self.state_space[ship_index][1] += int(self.move_speed / 2)
+        else: 
+          self.state_space[ship_index][1] += int(self.move_speed)
+          
+      # check if theres storm damage
+      if self.routes[self.state_space[ship_index][0]][2] and np.random.random() < self.routes[self.state_space[ship_index][0]][3]:
+          self.flotsam[self.state_space[ship_index][0]] += 1
+
+      # print(ship + " at " + str(self.state_space[ship_index][1] / self.state_space[ship_index][2] if self.state_space[ship_index][2] != 0 else 0))
+
+      # check if there's a pirate attack
+      if np.random.random() < self.routes[self.state_space[ship_index][0]][1] and not brace:
+        self.flotsam[self.state_space[ship_index][0]] += 1
+        self.rewards[ship] -= self.state_space[ship_index][2] / self.state_space[ship_index][1] if self.state_space[ship_index][1] != 0 else 0 # lose reward = -1*steps/dist
+        # print(ship + " scored " + str(self.rewards[ship]))
+        self.terminated[ship] = True
         self.terminations[ship] = True
 
-    # check if route has been completed
-    if self.routes[self.state_space[ship_index][0]][0] < self.state_space[ship_index][1]:
-      self.rewards[ship] += self.state_space[ship_index][1] / self.state_space[ship_index][2] if self.state_space[ship_index][2] != 0 else 0 # win reward = dist/steps
-      print(ship + "=" + str(self.rewards[ship]))
-      self.terminations[ship] = True
+      # check if route has been completed
+      if self.routes[self.state_space[ship_index][0]][0] < self.state_space[ship_index][1]:
+        self.rewards[ship] += self.state_space[ship_index][1] / self.state_space[ship_index][2] if self.state_space[ship_index][2] != 0 else 0 # win reward = dist/steps
+        # print(ship + " scored " + str(self.rewards[ship]))
+        self.terminated[ship] = True
+        self.terminations[ship] = True
+
+    # inactive ship
+    else:
+
+      # stop excess reward accumulation
+      self.rewards[self.agent_selection] = 0
+
+      # check if done
+      all_dead = True
+      for i in self.terminated:
+        if not self.terminated[i]:
+          all_dead = False
+          break
+
+      # terminate if done
+      if all_dead:
+        #self.truncations[self.agent_selection] = True
+        self.terminations = {i: True for i in self.agents}
+        return self._was_dead_step(None)        
 
     self.agent_selection = self._agent_selector.next()
 
     # petting zoo reward function
     self._accumulate_rewards()
-
-  def observe(self, b):
-    pass
 
 #class shipping_fo(domain):
 #  def env():
