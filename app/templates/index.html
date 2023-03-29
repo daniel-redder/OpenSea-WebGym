@@ -15,6 +15,7 @@
   
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
 
+  
 
   <title>Starter Template for Bootstrap</title>
   
@@ -126,18 +127,25 @@
 
       for(i = 0; i < cached_instances.length; i++){
         row = document.createElement("tr");
-        
-        if(i==2){
-          but = document.createElement("button")
-          but.onclick = //TODO add function to goto details page
-        }
-        else{
-          for(p=0;p<cached_instances[i].length; p++){
+
+        for(p=0;p<cached_instances[i].length; p++){
+          if(p==2){
+            but = document.createElement("button")
+            
+            but.setAttribute("onclick","location.href='/env/details/{0}'".replace('{0}',String(cached_instances[i][1])));
+            but.innerHTML = "Details"
+            
+            column = document.createElement("td");
+            column.appendChild(but);
+            row.appendChild(column);
+          }
+          else{
             column = document.createElement("td");
             column.innerHTML = cached_instances[i][p];
             row.appendChild(column);
           }
         }
+        
         tablBody.appendChild(row);
       }
     </script>    

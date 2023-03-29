@@ -1,5 +1,5 @@
 
-from .domain import domain
+from domain import domain
 
 
 class testDomain(domain):
